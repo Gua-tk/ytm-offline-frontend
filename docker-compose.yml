@@ -1,0 +1,8 @@
+---
+version: "2.1"
+services:
+  ytm-offline-frontend:
+    image: axlfc/ytm-offline-frontend:latest
+    ports:
+      - "0.0.0.0:5010:5010"
+    # restart: unless-stopped
