@@ -3,6 +3,8 @@ import flet as ft
 from flet import AppBar, ElevatedButton, Page, Text, View, colors, TextField
 import requests
 
+from flet_core import theme
+
 
 def make_post_request(url, data):
     try:
@@ -18,6 +20,10 @@ class FrontEnd:
     def __init__(self, page: Page, host_address, host_port):
         self.page = page
         self.page.title = "ytm-offline"
+
+        # self.page.splash = None
+        self.page.theme = theme.Theme(color_scheme_seed="green")
+
         self.page.on_route_change = self.route_change
         self.page.on_view_pop = self.view_pop
 
@@ -80,13 +86,17 @@ class FrontEnd:
         print("DONE")
 
     def submit_playlist(self, txt_url, e=None):
-        print(txt_url)
+        self.make_playlist_upload_request(txt_url)
+        print("DONE")
 
     def make_audio_upload_request(self, link):
         request_data = {"audio_url": link}
         # data = json.dumps(request_data)
         response = make_post_request('http://' + self.host_address + ':' + self.host_port + '/audio/upload', request_data)
         print("RESPEONSE:\t", response)
+
+    def make_playlist_upload_request(self, link):
+        pass
 
 
 def main(page: Page):
@@ -104,4 +114,4 @@ def main(page: Page):
 
 
 if __name__ == '__main__':
-    ft.app(main, view=ft.AppView.WEB_BROWSER, port=5010, host="0.0.0.0")
+    ft.app(main, view=ft.AppView.WEB_BROWSER, assets_dir="assets", port=5010, host="0.0.0.0")
