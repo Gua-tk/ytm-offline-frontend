@@ -1,6 +1,6 @@
 import os
 import flet as ft
-from flet import AppBar, ElevatedButton, Page, Text, View, colors, TextField
+from flet import AppBar, ElevatedButton, Page, Text, View, colors, TextField, FilePicker
 import requests
 
 from flet_core import theme
@@ -32,6 +32,13 @@ class FrontEnd:
         self.host_address = host_address
         self.host_port = host_port
 
+        self.file_picker = FilePicker(on_result=self.on_dialog_result)
+        self.page.overlay.append(self.file_picker)
+
+    def on_dialog_result(self, e: ft.FilePickerResultEvent):
+        print("Selected files:", e.files)
+        print("Selected file or directory:", e.path)
+
     def route_change(self, e=None):
         self.page.views.clear()
         self.page.views.append(
@@ -39,8 +46,10 @@ class FrontEnd:
                 "/",
                 [
                     AppBar(title=Text("ytm-offline"), bgcolor=colors.SURFACE_VARIANT),
-                    ElevatedButton("Audio", on_click=lambda _: self.page.go("/audio")),
-                    ElevatedButton("Playlist", on_click=lambda _: self.page.go("/playlist")),
+                    ElevatedButton("Audio URL", on_click=lambda _: self.page.go("/audio")),
+                    ElevatedButton("Playlist URL", on_click=lambda _: self.page.go("/playlist")),
+                    ElevatedButton("Audio Upload", on_click=lambda _: self.page.go("/audio/upload")),
+                    ElevatedButton("Playlist Upload", on_click=lambda _: self.page.go("/playlist/upload")),
                 ],
             )
         )
@@ -50,8 +59,8 @@ class FrontEnd:
                 View(
                     "/audio",
                     [
-                        AppBar(title=Text("Audio"), bgcolor=colors.SURFACE_VARIANT),
-                        ElevatedButton("Go Home", on_click=lambda _: self.page.go("/")),
+                        AppBar(title=Text("Audio URL"), bgcolor=colors.SURFACE_VARIANT),
+                        # ElevatedButton("Go Home", on_click=lambda _: self.page.go("/")),
                         Text("This is the Audio Page"),
                         txt_url,
                         ElevatedButton("Submit", on_click=lambda _: self.submit_audio(txt_url.value)),
@@ -65,11 +74,39 @@ class FrontEnd:
                 View(
                     "/playlist",
                     [
-                        AppBar(title=Text("Playlist"), bgcolor=colors.SURFACE_VARIANT),
-                        ElevatedButton("Go Home", on_click=lambda _: self.page.go("/")),
+                        AppBar(title=Text("Playlist URL"), bgcolor=colors.SURFACE_VARIANT),
+                        # ElevatedButton("Go Home", on_click=lambda _: self.page.go("/")),
                         Text("This is the Playlist Page"),
                         txt_url,
                         ElevatedButton("Submit", on_click=lambda _: self.submit_playlist(txt_url.value)),
+                    ],
+                )
+            )
+
+        if self.page.route == "/playlist/upload":
+            result = self.file_picker.result
+            self.page.views.append(
+                View(
+                    "/playlist/upload",
+                    [
+                        AppBar(title=Text("Upload .zip playlist"), bgcolor=colors.SURFACE_VARIANT),
+                        Text("This is the Upload Playlist Page"),
+                        ElevatedButton("Choose files...", on_click=lambda _: self.file_picker.pick_files(allow_multiple=True)),
+                        #ElevatedButton("Submit", on_click=lambda _: self.make_playlist_upload_request()),
+                    ],
+                )
+            )
+
+        if self.page.route == "/audio/upload":
+            result = self.file_picker.result
+            self.page.views.append(
+                View(
+                    "/audio/upload",
+                    [
+                        AppBar(title=Text("Upload .mp3 audio"), bgcolor=colors.SURFACE_VARIANT),
+                        Text("This is the Upload Audio Page"),
+                        ElevatedButton("Choose files...", on_click=lambda _: self.file_picker.pick_files(allow_multiple=True)),
+                        #ElevatedButton("Submit", on_click=lambda _: self.make_audio_upload_request()),
                     ],
                 )
             )
