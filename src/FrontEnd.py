@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import os
 from flet import (
     AppBar,
@@ -22,15 +24,22 @@ from flet import (
     app,
     AppView
 )
-
 import requests
-
 from flet_core import theme
-
 from typing import Dict
 
 
 def make_post_request(url, data):
+    """
+    Make a POST request to the specified URL with JSON data.
+
+    Args:
+        url (str): The URL to send the POST request to.
+        data (dict): The JSON data to include in the request body.
+
+    Returns:
+        dict or None: The JSON response if the request is successful, None otherwise.
+    """
     try:
         response = requests.post(url, json=data)
         response.raise_for_status()  # Raise an exception for HTTP errors (non-2xx status codes)
@@ -45,12 +54,14 @@ class FrontEnd:
         self.page = page
         self.page.title = "ytm-offline"
 
-        # self.page.splash = None
+        # Configure the theme of the page
         self.page.theme = theme.Theme(color_scheme_seed="green")
 
+        # Define event handlers
         self.page.on_route_change = self.route_change
         self.page.on_view_pop = self.view_pop
 
+        # Initialize properties
         self.route_change()
 
         self.host_address = host_address
@@ -60,83 +71,120 @@ class FrontEnd:
         self.files = Ref[Column]()
         self.upload_button = Ref[ElevatedButton]()
 
+        # Initialize the file picker
         self.file_picker = FilePicker(on_result=self.file_picker_result,
                                       on_upload=self.on_upload_progress)
         self.page.overlay.append(self.file_picker)
 
     def create_menu(self):
+        """
+        Create the main menu bar (AppBar).
+
+        Returns:
+            AppBar: The main menu bar.
+        """
         return AppBar(
-                        leading=Icon(icons.DOWNLOAD_FOR_OFFLINE),
-                        leading_width=40,
-                        title=Text("ytm-offline"),
-                        center_title=False,
-                        bgcolor=colors.SURFACE_VARIANT,
-                        actions=[
-                            PopupMenuButton(
-                                items=[
-                                    PopupMenuItem(
-                                        text="Audio URL",
-                                        on_click=lambda _: self.page.go("/audio")
-                                    ),
-                                    PopupMenuItem(),  # divider
-                                    PopupMenuItem(
-                                        text="Playlist URL",
-                                        on_click=lambda _: self.page.go("/playlist")
-                                    ),
-                                    PopupMenuItem(),
-                                    PopupMenuItem(
-                                        text="Audio Upload",
-                                        on_click=lambda _: self.page.go("/audio/upload")
-                                    ),
-                                    PopupMenuItem(),
-                                    PopupMenuItem(
-                                        text="Playlist Upload",
-                                        on_click=lambda _: self.page.go("/playlist/upload")
-                                    ),
-                                    PopupMenuItem(),  # divider
-                                    PopupMenuItem(
-                                        text="Audio Upload 2",
-                                        on_click=lambda _: self.page.go("/audio/upload2")
-                                    ),
-                                    PopupMenuItem(),
-                                    PopupMenuItem(
-                                        text="Playlist Upload 2",
-                                        on_click=lambda _: self.page.go("/playlist/upload2")
-                                    ),
-                                ],
-                            )
-                        ]
-                    )
+            leading=Icon(icons.DOWNLOAD_FOR_OFFLINE),
+            leading_width=40,
+            title=Text("ytm-offline"),
+            center_title=False,
+            bgcolor=colors.SURFACE_VARIANT,
+            actions=[
+                PopupMenuButton(
+                    items=[
+                        PopupMenuItem(
+                            text="Audio URL",
+                            on_click=lambda _: self.page.go("/audio")
+                        ),
+                        PopupMenuItem(),  # Divider
+                        PopupMenuItem(
+                            text="Playlist URL",
+                            on_click=lambda _: self.page.go("/playlist")
+                        ),
+                        PopupMenuItem(),
+                        PopupMenuItem(
+                            text="Audio Upload",
+                            on_click=lambda _: self.page.go("/audio/upload")
+                        ),
+                        PopupMenuItem(),
+                        PopupMenuItem(
+                            text="Playlist Upload",
+                            on_click=lambda _: self.page.go("/playlist/upload")
+                        ),
+                        PopupMenuItem(),  # Divider
+                        PopupMenuItem(
+                            text="Audio Upload 2",
+                            on_click=lambda _: self.page.go("/audio/upload2")
+                        ),
+                        PopupMenuItem(),
+                        PopupMenuItem(
+                            text="Playlist Upload 2",
+                            on_click=lambda _: self.page.go("/playlist/upload2")
+                        ),
+                    ],
+                )
+            ]
+        )
 
     def create_page_body(self):
+        """
+        Create the main content of the page.
+
+        Returns:
+            Text: A Text component representing the main content.
+        """
         return Text("Body!")
 
     def create_main_view(self):
+        """
+        Create the main view that includes the menu bar and page body.
+
+        Returns:
+            View: The main view.
+        """
         return View(
-                "/",
-                [
-                    self.create_menu(),
-                    self.create_page_body()
-                ],
-            )
+            "/",
+            [
+                self.create_menu(),
+                self.create_page_body()
+            ],
+        )
 
     def create_custom_view(self, result, view_path, view_name, view_function):
+        """
+        Create a custom view for a specific route.
+
+        Args:
+            result (Component): The result component for the custom view.
+            view_path (str): The route path for the custom view.
+            view_name (str): The name of the custom view.
+            view_function (callable): The function to execute when the "Submit" button is clicked.
+
+        Returns:
+            View: The custom view.
+        """
         return View(
-                    view_path,
-                    [
-                        AppBar(
-                            title=Text(view_name),
-                            bgcolor=colors.SURFACE_VARIANT
-                        ),
-                        Text("This is the " + view_name + " Page"),
-                        result,
-                        ElevatedButton(
-                            "Submit",
-                            on_click=lambda _: view_function)
-                    ],
-                )
+            view_path,
+            [
+                AppBar(
+                    title=Text(view_name),
+                    bgcolor=colors.SURFACE_VARIANT
+                ),
+                Text("This is the " + view_name + " Page"),
+                result,
+                ElevatedButton(
+                    "Submit",
+                    on_click=lambda _: view_function)
+            ],
+        )
 
     def file_picker_result(self, e: FilePickerResultEvent):
+        """
+        Handle file picker results.
+
+        Args:
+            e (FilePickerResultEvent): The event object containing file picker results.
+        """
         self.upload_button.current.disabled = True if e.files is None else False
         self.prog_bars.clear()
         self.files.current.controls.clear()
@@ -153,10 +201,22 @@ class FrontEnd:
         self.page.update()
 
     def on_upload_progress(self, e: FilePickerUploadEvent):
+        """
+        Handle file upload progress.
+
+        Args:
+            e (FilePickerUploadEvent): The event object containing file upload progress information.
+        """
         self.prog_bars[e.file_name].value = e.progress
         self.prog_bars[e.file_name].update()
 
     def upload_files(self, e):
+        """
+        Upload selected files when the "Upload" button is clicked.
+
+        Args:
+            e: The event object (not used).
+        """
         upload_list = []
         if self.file_picker.result is not None and self.file_picker.result.files is not None:
             for f in self.file_picker.result.files:
@@ -169,31 +229,47 @@ class FrontEnd:
             self.file_picker.upload(upload_list)
 
     def create_custom_upload_file_view(self, view_path, view_name):
+        """
+        Create a view for uploading files.
+
+        Args:
+            view_path (str): The route path for the upload view.
+            view_name (str): The name of the upload view.
+
+        Returns:
+            View: The upload file view.
+        """
         return View(
-                    view_path,
-                    [
-                        AppBar(
-                            title=Text(view_name),
-                            bgcolor=colors.SURFACE_VARIANT
-                        ),
-                        Text("This is the " + view_name + " Page"),
-                        ElevatedButton(
-                            "Select files...",
-                            icon=icons.FOLDER_OPEN,
-                            on_click=lambda _: self.file_picker.pick_files(allow_multiple=True)
-                        ),
-                        Column(ref=self.files),
-                        ElevatedButton(
-                            "Upload",
-                            ref=self.upload_button,
-                            icon=icons.UPLOAD,
-                            on_click=self.upload_files,
-                            disabled=True
-                        )
-                    ],
+            view_path,
+            [
+                AppBar(
+                    title=Text(view_name),
+                    bgcolor=colors.SURFACE_VARIANT
+                ),
+                Text("This is the " + view_name + " Page"),
+                ElevatedButton(
+                    "Select files...",
+                    icon=icons.FOLDER_OPEN,
+                    on_click=lambda _: self.file_picker.pick_files(allow_multiple=True)
+                ),
+                Column(ref=self.files),
+                ElevatedButton(
+                    "Upload",
+                    ref=self.upload_button,
+                    icon=icons.UPLOAD,
+                    on_click=self.upload_files,
+                    disabled=True
                 )
+            ],
+        )
 
     def route_change(self, e=None):
+        """
+        Handle route changes and update views accordingly.
+
+        Args:
+            e: The event object (not used).
+        """
         self.page.views.clear()
         self.page.views.append(self.create_main_view())
 
@@ -231,26 +307,57 @@ class FrontEnd:
         self.page.update()
 
     def view_pop(self, e=None):
+        """
+        Handle view popping (removing the top view).
+
+        Args:
+            e: The event object (not used).
+        """
         self.page.views.pop()
         top_view = self.page.views[-1]
         self.page.go(top_view.route)
 
     def submit_audio(self, txt_url, e=None):
+        """
+        Handle audio submission when the "Submit" button is clicked.
+
+        Args:
+            txt_url (str): The entered audio URL.
+            e: The event object (not used).
+        """
         print(txt_url)
         self.make_audio_upload_request(txt_url)
         print("DONE")
 
     def submit_playlist(self, txt_url, e=None):
+        """
+        Handle playlist submission when the "Submit" button is clicked.
+
+        Args:
+            txt_url (str): The entered playlist URL.
+            e: The event object (not used).
+        """
         self.make_playlist_upload_request(txt_url)
         print("DONE")
 
     def make_audio_upload_request(self, link):
+        """
+        Make a POST request to upload an audio file.
+
+        Args:
+            link (str): The audio URL to upload.
+        """
         request_data = {"audio_url": link}
-        # data = json.dumps(request_data)
         response = make_post_request('http://' + self.host_address + ':' + self.host_port + '/audio/upload', request_data)
-        print("RESPEONSE:\t", response)
+        print("RESPONSE:\t", response)
 
     def make_playlist_upload_request(self, link):
+        """
+        Make a POST request to upload a playlist.
+
+        Args:
+            link (str): The playlist URL to upload (not implemented).
+        """
         pass
 
 
