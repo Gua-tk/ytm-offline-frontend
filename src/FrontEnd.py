@@ -1,6 +1,6 @@
 import os
 import flet as ft
-from flet import AppBar, ElevatedButton, Page, Text, View, colors, TextField, FilePicker, Icon, IconButton, PopupMenuButton, PopupMenuItem
+from flet import AppBar, ElevatedButton, Page, Text, View, colors, TextField, FilePicker, Icon, PopupMenuButton, PopupMenuItem
 import requests
 
 from flet_core import theme
