@@ -1,6 +1,6 @@
 import os
 import flet as ft
-from flet import AppBar, ElevatedButton, Page, Text, View, colors, TextField, FilePicker
+from flet import AppBar, ElevatedButton, Page, Text, View, colors, TextField, FilePicker, Icon, IconButton, PopupMenuButton, PopupMenuItem
 import requests
 
 from flet_core import theme
@@ -39,20 +39,64 @@ class FrontEnd:
         print("Selected files:", e.files)
         print("Selected file or directory:", e.path)
 
-    def route_change(self, e=None):
-        self.page.views.clear()
-        self.page.views.append(
-            View(
+    def check_item_clicked(self, e):
+        e.control.checked = not e.control.checked
+        self.page.update()
+
+    def create_page_body(self):
+        return Text("Body!")
+
+    def create_buttons_view(self):
+        return View(
                 "/",
                 [
-                    AppBar(title=Text("ytm-offline"), bgcolor=colors.SURFACE_VARIANT),
-                    ElevatedButton("Audio URL", on_click=lambda _: self.page.go("/audio")),
-                    ElevatedButton("Playlist URL", on_click=lambda _: self.page.go("/playlist")),
-                    ElevatedButton("Audio Upload", on_click=lambda _: self.page.go("/audio/upload")),
-                    ElevatedButton("Playlist Upload", on_click=lambda _: self.page.go("/playlist/upload")),
+                    AppBar(
+                        leading=Icon(ft.icons.AIR),
+                        leading_width=40,
+                        title=Text("ytm-offline"),
+                        center_title=False,
+                        bgcolor=colors.SURFACE_VARIANT,
+                        actions=[
+                            # IconButton(ft.icons.WB_SUNNY_OUTLINED),
+                            # IconButton(ft.icons.FILTER_3),
+                            PopupMenuButton(
+                                items=[
+                                    PopupMenuItem(
+                                        text="Audio URL", checked=False, on_click=lambda _: self.page.go("/audio")
+                                    ),
+                                    PopupMenuItem(),  # divider
+                                    PopupMenuItem(
+                                        text="Playlist URL", checked=False, on_click=lambda _: self.page.go("/playlist")
+                                    ),
+                                    PopupMenuItem(),  # divider
+                                    PopupMenuItem(
+                                        text="Audio Upload", checked=False, on_click=lambda _: self.page.go("/audio/upload")
+                                    ),
+                                    PopupMenuItem(),  # divider
+                                    PopupMenuItem(
+                                        text="Playlist Upload", checked=False, on_click=lambda _: self.page.go("/playlist/upload")
+                                    ),
+                                    PopupMenuItem(),  # divider
+                                    PopupMenuItem(
+                                        text="Audio Upload 2", checked=False, on_click=lambda _: self.page.go("/audio/upload2")
+                                    ),
+                                    PopupMenuItem(),  # divider
+                                    PopupMenuItem(
+                                        text="Playlist Upload 2", checked=False, on_click=lambda _: self.page.go("/playlist/upload2")
+                                    ),
+                                ],
+                            )
+
+                        ]
+                    ),
+                    self.create_page_body()
                 ],
             )
-        )
+
+    def route_change(self, e=None):
+        self.page.views.clear()
+        self.page.views.append(self.create_buttons_view())
+
         if self.page.route == "/audio":
             txt_url = TextField(label="Enter song URL")
             self.page.views.append(
@@ -102,6 +146,34 @@ class FrontEnd:
             self.page.views.append(
                 View(
                     "/audio/upload",
+                    [
+                        AppBar(title=Text("Upload .mp3 audio"), bgcolor=colors.SURFACE_VARIANT),
+                        Text("This is the Upload Audio Page"),
+                        ElevatedButton("Choose files...", on_click=lambda _: self.file_picker.pick_files(allow_multiple=True)),
+                        #ElevatedButton("Submit", on_click=lambda _: self.make_audio_upload_request()),
+                    ],
+                )
+            )
+
+        if self.page.route == "/playlist/upload2":
+            result = self.file_picker.result
+            self.page.views.append(
+                View(
+                    "/playlist/upload2",
+                    [
+                        AppBar(title=Text("Upload .zip playlist"), bgcolor=colors.SURFACE_VARIANT),
+                        Text("This is the Upload Playlist Page"),
+                        ElevatedButton("Choose files...", on_click=lambda _: self.file_picker.pick_files(allow_multiple=True)),
+                        #ElevatedButton("Submit", on_click=lambda _: self.make_playlist_upload_request()),
+                    ],
+                )
+            )
+
+        if self.page.route == "/audio/upload2":
+            result = self.file_picker.result
+            self.page.views.append(
+                View(
+                    "/audio/upload2",
                     [
                         AppBar(title=Text("Upload .mp3 audio"), bgcolor=colors.SURFACE_VARIANT),
                         Text("This is the Upload Audio Page"),
