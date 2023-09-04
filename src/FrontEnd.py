@@ -1,9 +1,33 @@
 import os
-import flet as ft
-from flet import AppBar, ElevatedButton, Page, Text, View, colors, TextField, FilePicker, Icon, PopupMenuButton, PopupMenuItem
+from flet import (
+    AppBar,
+    ElevatedButton,
+    Page,
+    Text,
+    View,
+    colors,
+    TextField,
+    FilePicker,
+    Icon,
+    PopupMenuButton,
+    PopupMenuItem,
+    FilePickerResultEvent,
+    FilePickerUploadEvent,
+    FilePickerUploadFile,
+    ProgressRing,
+    Ref,
+    Column,
+    Row,
+    icons,
+    app,
+    AppView
+)
+
 import requests
 
 from flet_core import theme
+
+from typing import Dict
 
 
 def make_post_request(url, data):
@@ -32,48 +56,52 @@ class FrontEnd:
         self.host_address = host_address
         self.host_port = host_port
 
-        self.file_picker = FilePicker(on_result=self.on_dialog_result)
-        self.page.overlay.append(self.file_picker)
+        self.prog_bars: Dict[str, ProgressRing] = {}
+        self.files = Ref[Column]()
+        self.upload_button = Ref[ElevatedButton]()
 
-    def on_dialog_result(self, e: ft.FilePickerResultEvent):
-        # print("Selected files:", e.files)
-        # print("Selected file or directory:", e.path)
-        print("A file has been selected.")
+        self.file_picker = FilePicker(on_result=self.file_picker_result,
+                                      on_upload=self.on_upload_progress)
+        self.page.overlay.append(self.file_picker)
 
     def create_menu(self):
         return AppBar(
-                        leading=Icon(ft.icons.AIR),
+                        leading=Icon(icons.DOWNLOAD_FOR_OFFLINE),
                         leading_width=40,
                         title=Text("ytm-offline"),
                         center_title=False,
                         bgcolor=colors.SURFACE_VARIANT,
                         actions=[
-                            # IconButton(ft.icons.WB_SUNNY_OUTLINED),
-                            # IconButton(ft.icons.FILTER_3),
                             PopupMenuButton(
                                 items=[
                                     PopupMenuItem(
-                                        text="Audio URL", on_click=lambda _: self.page.go("/audio")
+                                        text="Audio URL",
+                                        on_click=lambda _: self.page.go("/audio")
                                     ),
                                     PopupMenuItem(),  # divider
                                     PopupMenuItem(
-                                        text="Playlist URL", on_click=lambda _: self.page.go("/playlist")
+                                        text="Playlist URL",
+                                        on_click=lambda _: self.page.go("/playlist")
+                                    ),
+                                    PopupMenuItem(),
+                                    PopupMenuItem(
+                                        text="Audio Upload",
+                                        on_click=lambda _: self.page.go("/audio/upload")
+                                    ),
+                                    PopupMenuItem(),
+                                    PopupMenuItem(
+                                        text="Playlist Upload",
+                                        on_click=lambda _: self.page.go("/playlist/upload")
                                     ),
                                     PopupMenuItem(),  # divider
                                     PopupMenuItem(
-                                        text="Audio Upload", on_click=lambda _: self.page.go("/audio/upload")
+                                        text="Audio Upload 2",
+                                        on_click=lambda _: self.page.go("/audio/upload2")
                                     ),
-                                    PopupMenuItem(),  # divider
+                                    PopupMenuItem(),
                                     PopupMenuItem(
-                                        text="Playlist Upload", on_click=lambda _: self.page.go("/playlist/upload")
-                                    ),
-                                    PopupMenuItem(),  # divider
-                                    PopupMenuItem(
-                                        text="Audio Upload 2", on_click=lambda _: self.page.go("/audio/upload2")
-                                    ),
-                                    PopupMenuItem(),  # divider
-                                    PopupMenuItem(
-                                        text="Playlist Upload 2", on_click=lambda _: self.page.go("/playlist/upload2")
+                                        text="Playlist Upload 2",
+                                        on_click=lambda _: self.page.go("/playlist/upload2")
                                     ),
                                 ],
                             )
@@ -96,36 +124,74 @@ class FrontEnd:
         return View(
                     view_path,
                     [
-                        AppBar(title=Text(view_name), bgcolor=colors.SURFACE_VARIANT),
+                        AppBar(
+                            title=Text(view_name),
+                            bgcolor=colors.SURFACE_VARIANT
+                        ),
                         Text("This is the " + view_name + " Page"),
                         result,
-                        ElevatedButton("Submit", on_click=lambda _: view_function),
+                        ElevatedButton(
+                            "Submit",
+                            on_click=lambda _: view_function)
                     ],
                 )
 
-    def create_custom_upload_file_view(self, result, view_path, view_name):
+    def file_picker_result(self, e: FilePickerResultEvent):
+        self.upload_button.current.disabled = True if e.files is None else False
+        self.prog_bars.clear()
+        self.files.current.controls.clear()
+        if e.files is not None:
+            for f in e.files:
+                prog = ProgressRing(
+                    value=0,
+                    bgcolor="#eeeeee",
+                    width=20,
+                    height=20
+                )
+                self.prog_bars[f.name] = prog
+                self.files.current.controls.append(Row([prog, Text(f.name)]))
+        self.page.update()
+
+    def on_upload_progress(self, e: FilePickerUploadEvent):
+        self.prog_bars[e.file_name].value = e.progress
+        self.prog_bars[e.file_name].update()
+
+    def upload_files(self, e):
+        upload_list = []
+        if self.file_picker.result is not None and self.file_picker.result.files is not None:
+            for f in self.file_picker.result.files:
+                upload_list.append(
+                    FilePickerUploadFile(
+                        f.name,
+                        upload_url=self.page.get_upload_url(f.name, 600),
+                    )
+                )
+            self.file_picker.upload(upload_list)
+
+    def create_custom_upload_file_view(self, view_path, view_name):
         return View(
                     view_path,
                     [
-                        AppBar(title=Text(view_name), bgcolor=colors.SURFACE_VARIANT),
+                        AppBar(
+                            title=Text(view_name),
+                            bgcolor=colors.SURFACE_VARIANT
+                        ),
                         Text("This is the " + view_name + " Page"),
-                        ElevatedButton("Choose files...", on_click=lambda _: self.file_picker.pick_files(allow_multiple=True)),
-                        ElevatedButton("Upload", on_click=lambda _: self.test_function(
-                            "NAME: " + str(self.file_picker.result.files[0].path),
-                            "PATH: " + str(self.file_picker.result.files[0].name),
-                            "SIZE: " + str(self.file_picker.result.files[0].size)
+                        ElevatedButton(
+                            "Select files...",
+                            icon=icons.FOLDER_OPEN,
+                            on_click=lambda _: self.file_picker.pick_files(allow_multiple=True)
+                        ),
+                        Column(ref=self.files),
+                        ElevatedButton(
+                            "Upload",
+                            ref=self.upload_button,
+                            icon=icons.UPLOAD,
+                            on_click=self.upload_files,
+                            disabled=True
                         )
-                                       )
                     ],
                 )
-
-    def test_function(self, text, text2, text3):
-        print(text)
-        print("_" * 50)
-        print(text2)
-        print("_" * 50)
-        print(text3)
-        print("START UPLOAD!")
 
     def route_change(self, e=None):
         self.page.views.clear()
@@ -144,44 +210,24 @@ class FrontEnd:
             )
 
         if self.page.route == "/audio/upload":
-            result = self.file_picker.result
             self.page.views.append(
-                self.create_custom_upload_file_view(result, "/audio/upload", "Upload .mp3 audio")
+                self.create_custom_upload_file_view("/audio/upload", "Upload .mp3 audio")
             )
 
         if self.page.route == "/playlist/upload":
-            result = self.file_picker.result
             self.page.views.append(
-                self.create_custom_upload_file_view(result, "/playlist/upload", "Upload .zip playlist")
+                self.create_custom_upload_file_view("/playlist/upload", "Upload .zip playlist")
             )
 
         if self.page.route == "/audio/upload2":
-            result = self.file_picker.result
             self.page.views.append(
-                View(
-                    "/audio/upload2",
-                    [
-                        AppBar(title=Text("Upload .mp3 audio"), bgcolor=colors.SURFACE_VARIANT),
-                        Text("This is the Upload Audio Page"),
-                        ElevatedButton("Choose files...", on_click=lambda _: self.file_picker.pick_files(allow_multiple=True)),
-                        #ElevatedButton("Submit", on_click=lambda _: self.make_audio_upload_request()),
-                    ],
-                )
+                self.create_custom_upload_file_view("/audio/upload2", "Upload .mp3 audio")
             )
 
         if self.page.route == "/playlist/upload2":
-            result = self.file_picker.result
             self.page.views.append(
-                View(
-                    "/playlist/upload2",
-                    [
-                        AppBar(title=Text("Upload .zip playlist"), bgcolor=colors.SURFACE_VARIANT),
-                        Text("This is the Upload Playlist Page"),
-                        ElevatedButton("Choose files...", on_click=lambda _: self.file_picker.pick_files(allow_multiple=True)),
-                        #ElevatedButton("Submit", on_click=lambda _: self.make_playlist_upload_request()),
-                    ],
-                )
-            )
+                self.create_custom_upload_file_view("/playlist/upload2", "Upload .zip playlist"))
+
         self.page.update()
 
     def view_pop(self, e=None):
@@ -223,4 +269,4 @@ def main(page: Page):
 
 
 if __name__ == '__main__':
-    ft.app(main, view=ft.AppView.WEB_BROWSER, assets_dir="assets", port=5010, host="0.0.0.0")
+    app(main, view=AppView.WEB_BROWSER, assets_dir="assets", port=5010, host="0.0.0.0", upload_dir="assets/uploads")
