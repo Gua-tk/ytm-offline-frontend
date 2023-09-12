@@ -9,6 +9,7 @@ from flet import (
     View,
     colors,
     TextField,
+    TextButton,
     FilePicker,
     Icon,
     PopupMenuButton,
@@ -242,16 +243,16 @@ class FrontEnd:
 
     def show_success_dialog(self):
         if self.total_files_to_upload == 1 and self.successfully_uploaded_files == self.total_files_to_upload:
-            self.show_alert_dialog("File Uploaded", "File has been uploaded!", False)
+            self.show_simple_alert_dialog("File Uploaded", "File has been uploaded!", False)
+            # self.show_modal_alert_dialog("File Uploaded", "File has been uploaded!", lambda _: self.close_dlg(), lambda _: self.close_dlg())
         elif self.total_files_to_upload > 1 and self.successfully_uploaded_files == self.total_files_to_upload:
-            self.show_alert_dialog("Files Uploaded",
+            self.show_simple_alert_dialog("Files Uploaded",
                                    f"All {self.total_files_to_upload} files have been uploaded!",
                                    False)
 
     def increment_uploaded_files_count(self):
         self.successfully_uploaded_files += 1
         self.show_success_dialog()
-
 
     def upload_files(self, e):
         """
@@ -309,11 +310,12 @@ class FrontEnd:
         dlg.open = True
         self.page.update()
 
-    def close_dlg(self, dlg):
+    def close_dlg(self):
+        dlg = self.page.dialog
         dlg.open = False
         self.page.update()
 
-    def create_simple_alert_dialog(self, title, content_text, dismiss_func, alignment=MainAxisAlignment.END):
+    def create_simple_alert_dialog(self, title, content_text, dismiss_func=lambda e: print("Dialog dismissed!"), alignment=MainAxisAlignment.END):
         return AlertDialog(
             title=Text(title),
             content=Text(content_text),
@@ -321,9 +323,22 @@ class FrontEnd:
             actions_alignment=alignment
         )
 
-    def show_alert_dialog(self, title_text, content_text, is_auto_closed=True, delay=2):
+    def create_modal_alert_dialog(self, title, content_text, yes_func, no_func, dismiss_func=lambda e: print("Modal dialog dismissed!"), alignment=MainAxisAlignment.END):
+        return AlertDialog(
+            modal=True,
+            title=Text(title),
+            content=Text(content_text),
+            actions=[
+                TextButton("Yes", on_click=yes_func),
+                TextButton("No", on_click=no_func),
+            ],
+            actions_alignment=alignment,
+            on_dismiss=dismiss_func,
+        )
+
+    def show_simple_alert_dialog(self, title_text, content_text, is_auto_closed=True, delay=2):
         # Create an alert dialog with the given title and content
-        alert_dialog = self.create_simple_alert_dialog(title_text, content_text, lambda e: print("Dialog closed!"))
+        alert_dialog = self.create_simple_alert_dialog(title_text, content_text)
 
         # Show the dialog
         self.open_dlg(alert_dialog)
@@ -331,7 +346,14 @@ class FrontEnd:
         # Close the dialog and print the message when all files are uploaded
         if is_auto_closed:
             sleep(delay)
-            self.close_dlg(alert_dialog)
+            self.close_dlg()
+
+    def show_modal_alert_dialog(self, title_text, content_text, yes_func, no_func):
+        # Create an alert dialog with the given title and content
+        alert_dialog = self.create_modal_alert_dialog(title_text, content_text, yes_func, no_func)
+
+        # Show the dialog
+        self.open_dlg(alert_dialog)
 
     def route_change(self, e=None):
         """
