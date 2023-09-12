@@ -17,6 +17,8 @@ from flet import (
     FilePickerUploadEvent,
     FilePickerUploadFile,
     ProgressRing,
+    AlertDialog,
+    MainAxisAlignment,
     Ref,
     Column,
     Row,
@@ -27,6 +29,7 @@ from flet import (
 import requests
 from flet_core import theme
 from typing import Dict
+from time import sleep
 
 
 def make_post_request(url, data):
@@ -69,7 +72,11 @@ class FrontEnd:
 
         self.prog_bars: Dict[str, ProgressRing] = {}
         self.files = Ref[Column]()
+        self.total_files_to_upload = 0
+        self.successfully_uploaded_files = 0
         self.upload_button = Ref[ElevatedButton]()
+
+        self.dialog = Ref[AlertDialog]()
 
         # Initialize the file picker
         self.file_picker = FilePicker(on_result=self.file_picker_result,
@@ -150,6 +157,28 @@ class FrontEnd:
             ],
         )
 
+    def create_button(self, text, func, icon="", ref="", disabled=False):
+        """
+            Create a button with optional parameters.
+
+            Args:
+                text (str): The text to display on the button.
+                func (callable): The function to execute when the button is clicked.
+                icon (str, optional): The icon to display on the button.
+                ref (Ref, optional): A reference to associate with the button.
+                disabled (bool, optional): Whether the button should be initially disabled.
+
+            Returns:
+                ElevatedButton: The created button.
+            """
+        return ElevatedButton(
+            text,
+            on_click=func,
+            icon=icon,
+            ref=ref,
+            disabled=disabled
+        )
+
     def create_custom_view(self, result, view_path, view_name, view_function):
         """
         Create a custom view for a specific route.
@@ -172,9 +201,7 @@ class FrontEnd:
                 ),
                 Text("This is the " + view_name + " Page"),
                 result,
-                ElevatedButton(
-                    "Submit",
-                    on_click=lambda _: view_function)
+                self.create_button("Submit", lambda _: view_function)
             ],
         )
 
@@ -210,6 +237,22 @@ class FrontEnd:
         self.prog_bars[e.file_name].value = e.progress
         self.prog_bars[e.file_name].update()
 
+        if e.progress == 1:  # Check if the upload progress is 100%
+            self.increment_uploaded_files_count()  # Call the function to increment the count
+
+    def show_success_dialog(self):
+        if self.total_files_to_upload == 1 and self.successfully_uploaded_files == self.total_files_to_upload:
+            self.show_alert_dialog("File Uploaded", "File has been uploaded!", False)
+        elif self.total_files_to_upload > 1 and self.successfully_uploaded_files == self.total_files_to_upload:
+            self.show_alert_dialog("Files Uploaded",
+                                   f"All {self.total_files_to_upload} files have been uploaded!",
+                                   False)
+
+    def increment_uploaded_files_count(self):
+        self.successfully_uploaded_files += 1
+        self.show_success_dialog()
+
+
     def upload_files(self, e):
         """
         Upload selected files when the "Upload" button is clicked.
@@ -217,8 +260,12 @@ class FrontEnd:
         Args:
             e: The event object (not used).
         """
+        self.total_files_to_upload = 0
+        self.successfully_uploaded_files = 0
         upload_list = []
+
         if self.file_picker.result is not None and self.file_picker.result.files is not None:
+            self.total_files_to_upload = len(self.file_picker.result.files)  # Update the total count of files
             for f in self.file_picker.result.files:
                 upload_list.append(
                     FilePickerUploadFile(
@@ -247,21 +294,44 @@ class FrontEnd:
                     bgcolor=colors.SURFACE_VARIANT
                 ),
                 Text("This is the " + view_name + " Page"),
-                ElevatedButton(
+                self.create_button(
                     "Select files...",
-                    icon=icons.FOLDER_OPEN,
-                    on_click=lambda _: self.file_picker.pick_files(allow_multiple=True)
+                    lambda _: self.file_picker.pick_files(allow_multiple=True),
+                    icon=icons.FOLDER_OPEN
                 ),
                 Column(ref=self.files),
-                ElevatedButton(
-                    "Upload",
-                    ref=self.upload_button,
-                    icon=icons.UPLOAD,
-                    on_click=self.upload_files,
-                    disabled=True
-                )
+                self.create_button("Upload", self.upload_files, icons.UPLOAD, self.upload_button, True)
             ],
         )
+
+    def open_dlg(self, dlg):
+        self.page.dialog = dlg
+        dlg.open = True
+        self.page.update()
+
+    def close_dlg(self, dlg):
+        dlg.open = False
+        self.page.update()
+
+    def create_simple_alert_dialog(self, title, content_text, dismiss_func, alignment=MainAxisAlignment.END):
+        return AlertDialog(
+            title=Text(title),
+            content=Text(content_text),
+            on_dismiss=dismiss_func,
+            actions_alignment=alignment
+        )
+
+    def show_alert_dialog(self, title_text, content_text, is_auto_closed=True, delay=2):
+        # Create an alert dialog with the given title and content
+        alert_dialog = self.create_simple_alert_dialog(title_text, content_text, lambda e: print("Dialog closed!"))
+
+        # Show the dialog
+        self.open_dlg(alert_dialog)
+
+        # Close the dialog and print the message when all files are uploaded
+        if is_auto_closed:
+            sleep(delay)
+            self.close_dlg(alert_dialog)
 
     def route_change(self, e=None):
         """
