@@ -12,6 +12,8 @@ from flet import (
     TextButton,
     FilePicker,
     Icon,
+    Switch,
+    IconButton,
     PopupMenuButton,
     PopupMenuItem,
     FilePickerResultEvent,
@@ -56,10 +58,72 @@ def make_post_request(url, data):
 class FrontEnd:
     def __init__(self, page: Page, host_address, host_port):
         self.page = page
-        self.page.title = "ytm-offline"
+        self.page.title = "ytm-manager"
 
         # Configure the theme of the page
-        self.page.theme = theme.Theme(color_scheme_seed="green")
+        # self.page.theme = theme.Theme(color_scheme_seed="green")
+        self.page.theme_mode = "light"
+
+        # Define route buttons
+        # Audio URL PopupMenuItem
+        self.audio_url_icon_button = self.create_icon_button(
+            lambda _: self.page.go("/audio"),
+            "Audio URL",
+            icons.AUDIOTRACK,
+            icons.AUDIOTRACK_OUTLINED,
+            colors.GREY,
+            colors.RED
+        )
+
+        # Playlist URL PopupMenuItem
+        self.playlist_url_icon_button = self.create_icon_button(
+            lambda _: self.page.go("/playlist"),
+            "Playlist URL",
+            icons.WEBHOOK,  # Replace with the appropriate icon for Playlist URL
+            icons.WEBHOOK_OUTLINED,  # Replace with the appropriate outlined icon
+            colors.GREY,
+            colors.RED
+        )
+
+        # Audio Upload PopupMenuItem
+        self.audio_upload_icon_button = self.create_icon_button(
+            lambda _: self.page.go("/audio/upload"),
+            "Audio Upload",
+            icons.AUDIO_FILE,
+            icons.AUDIO_FILE_OUTLINED,
+            colors.GREY,
+            colors.RED
+        )
+
+        # Playlist Upload PopupMenuItem
+        self.playlist_upload_icon_button = self.create_icon_button(
+            lambda _: self.page.go("/playlist/upload"),
+            "Playlist Upload",
+            icons.LIST,  # Replace with the appropriate icon for Playlist Upload
+            icons.LIST_OUTLINED,  # Replace with the appropriate outlined icon
+            colors.GREY,
+            colors.RED
+        )
+
+        # Audio Upload 2 PopupMenuItem
+        self.audio_upload_2_icon_button = self.create_icon_button(
+            lambda _: self.page.go("/audio/upload2"),
+            "Audio Upload 2",
+            icons.UPLOAD,  # Replace with the appropriate icon for Audio Upload 2
+            icons.UPLOAD_OUTLINED,  # Replace with the appropriate outlined icon
+            colors.GREY,
+            colors.RED
+        )
+
+        # Playlist Upload 2 PopupMenuItem
+        self.playlist_upload_2_icon_button = self.create_icon_button(
+            lambda _: self.page.go("/playlist/upload2"),
+            "Playlist Upload 2",
+            icons.UPLOAD,  # Replace with the appropriate icon for Playlist Upload 2
+            icons.UPLOAD_OUTLINED,  # Replace with the appropriate outlined icon
+            colors.GREY,
+            colors.RED
+        )
 
         # Define event handlers
         self.page.on_route_change = self.route_change
@@ -84,6 +148,29 @@ class FrontEnd:
                                       on_upload=self.on_upload_progress)
         self.page.overlay.append(self.file_picker)
 
+    def create_icon_button(self, func, tooltip, icon, selected_icon, color, selected_color, selected=False, icon_size=35):
+        return IconButton(
+            icon=icon,
+            selected_icon=selected_icon,
+            icon_color=color,
+            selected_icon_color=selected_color,
+            selected=selected,
+            icon_size=icon_size,
+            tooltip=tooltip,
+            on_click=func,
+        )
+
+    def toggle_dark_mode(self, e):
+        # Toggle between light and dark themes
+        self.page.theme_mode = "light" if self.page.theme_mode == "dark" else "dark"
+        self.page.update()
+
+    def create_switch(self, label_text, func):
+        return Switch(
+            label=label_text,
+            on_change=func
+        )
+
     def create_menu(self):
         """
         Create the main menu bar (AppBar).
@@ -91,6 +178,9 @@ class FrontEnd:
         Returns:
             AppBar: The main menu bar.
         """
+
+        # dark_mode_switch = self.create_switch("Dark Mode", self.toggle_dark_mode)
+
         return AppBar(
             leading=Icon(icons.DOWNLOAD_FOR_OFFLINE),
             leading_width=40,
@@ -98,37 +188,19 @@ class FrontEnd:
             center_title=False,
             bgcolor=colors.SURFACE_VARIANT,
             actions=[
+                self.audio_url_icon_button,
+                self.playlist_url_icon_button,
+                self.audio_upload_icon_button,
+                self.playlist_upload_icon_button,
+                self.audio_upload_2_icon_button,
+                self.playlist_upload_2_icon_button,
                 PopupMenuButton(
                     items=[
                         PopupMenuItem(
-                            text="Audio URL",
-                            on_click=lambda _: self.page.go("/audio")
-                        ),
-                        PopupMenuItem(),  # Divider
-                        PopupMenuItem(
-                            text="Playlist URL",
-                            on_click=lambda _: self.page.go("/playlist")
-                        ),
-                        PopupMenuItem(),
-                        PopupMenuItem(
-                            text="Audio Upload",
-                            on_click=lambda _: self.page.go("/audio/upload")
-                        ),
-                        PopupMenuItem(),
-                        PopupMenuItem(
-                            text="Playlist Upload",
-                            on_click=lambda _: self.page.go("/playlist/upload")
-                        ),
-                        PopupMenuItem(),  # Divider
-                        PopupMenuItem(
-                            text="Audio Upload 2",
-                            on_click=lambda _: self.page.go("/audio/upload2")
-                        ),
-                        PopupMenuItem(),
-                        PopupMenuItem(
-                            text="Playlist Upload 2",
-                            on_click=lambda _: self.page.go("/playlist/upload2")
-                        ),
+                            text="Dark Mode",
+                            icon=icons.DARK_MODE,
+                            on_click=self.toggle_dark_mode
+                        )
                     ],
                 )
             ]
