@@ -16,3 +16,4 @@ flet publish src/FrontEnd.py --web-render html --assets assets
 ```shell
 python3 -m http.server 5010 --directory src/dist
 ```
+
