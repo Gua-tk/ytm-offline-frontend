@@ -35,5 +35,5 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ytm-offline-frontend:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ytm-manager-frontend:latest
           
