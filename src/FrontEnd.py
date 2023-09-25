@@ -1,40 +1,42 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-from uuid import UUID
-
 import uuid as uuid
 from flet import (
     AppBar,
-    ElevatedButton,
     Page,
-    Text,
     View,
-    colors,
+    Container,
     TextField,
-    TextButton,
     FilePicker,
     Icon,
-    Switch,
-    IconButton,
     PopupMenuButton,
     PopupMenuItem,
     FilePickerResultEvent,
     FilePickerUploadEvent,
     FilePickerUploadFile,
     ProgressRing,
-    AlertDialog,
-    MainAxisAlignment,
     Ref,
     Column,
     Row,
+    alignment,
+    margin,
     icons,
+    animation,
+    transform,
+    ButtonStyle,
+    TextStyle,
+    MaterialState,
+    Image,
+    RoundedRectangleBorder,
     app,
     AppView
 )
 import requests
 from typing import Dict
 from time import sleep
+
+from flet_constructors import *
 
 
 def make_post_request(url, data):
@@ -69,7 +71,7 @@ class FrontEnd:
 
         # Define route buttons
         # Audio URL PopupMenuItem
-        self.audio_url_icon_button = self.create_icon_button(
+        self.audio_url_icon_button = create_icon_button(
             lambda _: self.page.go("/audio"),
             "Audio URL",
             icons.AUDIOTRACK,
@@ -79,7 +81,7 @@ class FrontEnd:
         )
 
         # Playlist URL PopupMenuItem
-        self.playlist_url_icon_button = self.create_icon_button(
+        self.playlist_url_icon_button = create_icon_button(
             lambda _: self.page.go("/playlist"),
             "Playlist URL",
             icons.WEBHOOK,  # Replace with the appropriate icon for Playlist URL
@@ -89,7 +91,7 @@ class FrontEnd:
         )
 
         # Audio Upload PopupMenuItem
-        self.audio_upload_icon_button = self.create_icon_button(
+        self.audio_upload_icon_button = create_icon_button(
             lambda _: self.page.go("/audio/upload"),
             "Audio Upload",
             icons.AUDIO_FILE,
@@ -99,7 +101,7 @@ class FrontEnd:
         )
 
         # Playlist Upload PopupMenuItem
-        self.playlist_upload_icon_button = self.create_icon_button(
+        self.playlist_upload_icon_button = create_icon_button(
             lambda _: self.page.go("/playlist/upload"),
             "Playlist Upload",
             icons.LIST,  # Replace with the appropriate icon for Playlist Upload
@@ -109,7 +111,7 @@ class FrontEnd:
         )
 
         # Audio Upload 2 PopupMenuItem
-        self.audio_upload_2_icon_button = self.create_icon_button(
+        self.audio_upload_2_icon_button = create_icon_button(
             lambda _: self.page.go("/audio/download"),
             "Download Audio",
             icons.DOWNLOAD,  # Replace with the appropriate icon for Audio Upload 2
@@ -119,7 +121,7 @@ class FrontEnd:
         )
 
         # Playlist Upload 2 PopupMenuItem
-        self.playlist_upload_2_icon_button = self.create_icon_button(
+        self.playlist_upload_2_icon_button = create_icon_button(
             lambda _: self.page.go("/playlist/download"),
             "Download Playlist",
             icons.DOWNLOADING,  # Replace with the appropriate icon for Playlist Upload 2
@@ -154,28 +156,10 @@ class FrontEnd:
                                       on_upload=self.on_upload_progress)
         self.page.overlay.append(self.file_picker)
 
-    def create_icon_button(self, func, tooltip, icon, selected_icon, color, selected_color, selected=False, icon_size=35):
-        return IconButton(
-            icon=icon,
-            selected_icon=selected_icon,
-            icon_color=color,
-            selected_icon_color=selected_color,
-            selected=selected,
-            icon_size=icon_size,
-            tooltip=tooltip,
-            on_click=func,
-        )
-
     def toggle_dark_mode(self, e):
         # Toggle between light and dark themes
         self.page.theme_mode = "light" if self.page.theme_mode == "dark" else "dark"
         self.page.update()
-
-    def create_switch(self, label_text, func):
-        return Switch(
-            label=label_text,
-            on_change=func
-        )
 
     def create_menu(self):
         """
@@ -185,7 +169,7 @@ class FrontEnd:
             AppBar: The main menu bar.
         """
 
-        # dark_mode_switch = self.create_switch("Dark Mode", self.toggle_dark_mode)
+        # dark_mode_switch = create_switch("Dark Mode", self.toggle_dark_mode)
 
         return AppBar(
             leading=Icon(icons.DOWNLOAD_FOR_OFFLINE),
@@ -209,15 +193,15 @@ class FrontEnd:
                         ),
                         PopupMenuButton(),
                         PopupMenuItem(
-                            text="Sign In",
+                            text="Register",
                             icon=icons.SUPERVISED_USER_CIRCLE,
-                            on_click=self.toggle_dark_mode
+                            on_click=lambda _: self.page.go("/register")
                         ),
                         PopupMenuButton(),
                         PopupMenuItem(
-                            text="Create Account",
+                            text="Log In",
                             icon=icons.ACCESSIBILITY_NEW,
-                            on_click=self.toggle_dark_mode
+                            on_click=lambda _: self.page.go("/login")
                         )
                     ],
                 )
@@ -231,7 +215,232 @@ class FrontEnd:
         Returns:
             Text: A Text component representing the main content.
         """
-        return Text("Body!")
+        self.page.vertical_alignment="center"
+        self.page.horizontal_alignment="center"
+
+        isLogin = Text("Login",
+                       weight="bold",
+                       color="white",
+                       size=20,
+
+                       offset=transform.Offset(0,0),
+                       animate_offset=animation.Animation(duration=300)
+                       )
+
+        # Logic register button
+        def ganti(e):
+            # Animation of the ctx container
+
+            ctx.bgcolor = "blue" if isLogin.value == "Login" else "red"
+            ctx.height = 800 if isLogin.value == "Login" else 150
+            ctx.width = 300 if isLogin.value == "Login" else 200
+            ctx.border_radius = 0 if isLogin.value == "Login" else 100
+
+            # isLogin animation
+            isLogin.value = "Register" if isLogin.value == "Login" else "Login"
+            isLogin.offset = transform.Offset(5, 0) if isLogin.value == "Login" else transform.Offset(0, 0)
+
+            # register animation button hide and show
+            register_btn.value = "Register" if isLogin.value == "Login" else "Login"
+            register_btn.offset = transform.Offset(0, 0) if isLogin.value == "Login" else transform.Offset(5, 0)
+
+            # Show hide you register form here
+            txt_box_register.visible = True if isLogin.value == "Register" else False
+
+            self.page.update()
+
+        txt_box_register = Container(
+            content=Column([
+                TextField(label="Username",
+                          border_color="white",
+                          color="white",
+                          ),
+                TextField(label="Password",
+                          border_color="white",
+                          color="white",
+                          ),
+                # Login Button
+                ElevatedButton(
+                    width=self.page.window_width,
+                    on_click=ganti
+                )
+            ])
+        )
+
+        # Set Register is hidden
+        txt_box_register.visible = False
+
+        # Register button
+        register_btn = ElevatedButton("Register",
+                                      on_click=ganti,
+                                      offset=transform.Offset(0,0),
+                                      animate_offset=animation.Animation(duration=300)
+        )
+
+        ctx = Container(
+            bgcolor="red",
+            alignment=alignment.center,
+            border_radius=100,
+            padding=20,
+            width=1000,
+            height=800,
+            animate=animation.Animation(duration=300, curve="easyInOut"),
+            content=Column(
+                controls=[
+                    Container(
+                        width=300,
+                        margin=margin.only(left=170, right=10, top=10),
+                        content=TextButton(
+                            "Create Account",
+                            style=ButtonStyle(
+                                color="#000000"
+                            )
+                        )
+                    ),
+                    Container(
+                        width=300,
+                        margin=margin.only(left=110, right=10, top=25),
+                        content=Text(
+                            "Login",
+                            size=30,
+                            color="#000000",
+                            weight="w700"
+                        )
+                    ),
+                    Container(
+                        width=300,
+                        margin=margin.only(left=20, right=20, top=20),
+                        alignment=alignment.center,
+                        content=Text(
+                            "Please enter your information below in order to log in to your account",
+                            size=14,
+                            color="#000000",
+                            text_align="center"
+                        )
+                    ),
+                    Container(
+                        width=300,
+                        margin=margin.only(left=20, right=20, top=35),
+                        content=Column(
+                            controls=[
+                                Text(
+                                    "Username",
+                                    size=14,
+                                    color="#000000"
+                                ),
+                                TextField(
+                                    text_style=TextStyle(
+                                        color="#000000"
+                                    ),
+                                    border_radius=15,
+                                    border_color=colors.BLACK,
+                                    focused_border_color=colors.WHITE70,
+                                )
+                            ]
+                        )
+                    ),
+                    Container(
+                        width=300,
+                        margin=margin.only(left=20, right=20, top=5),
+                        content=Column(
+                            controls=[
+                                Text(
+                                    "Password",
+                                    size=14,
+                                    color="#000000"
+                                ),
+                                TextField(
+                                    text_style=TextStyle(
+                                        color="#000000"
+                                    ),
+                                    password=True,
+                                    can_reveal_password=True,
+                                    border_radius=15,
+                                    border_color=colors.BLACK,
+                                    focused_border_color=colors.WHITE70,
+                                )
+                            ]
+                        )
+                    ),
+                    Container(
+                        width=300,
+                        margin=margin.only(left=120),
+                        content=TextButton(
+                            "Forgot Password?",
+                            style=ButtonStyle(
+                                color="#000000",
+                            )
+                        )
+                    ),
+                    Container(
+                        width=300,
+                        margin=margin.only(left=20, right=20, top=10),
+                        content=ElevatedButton(
+                            "Login",
+                            width=300,
+                            height=55,
+                            style=ButtonStyle(
+                                color="#ffffff",
+                                bgcolor=colors.ORANGE_700,
+                                shape={
+                                    MaterialState.FOCUSED: RoundedRectangleBorder(radius=5),
+                                    MaterialState.HOVERED: RoundedRectangleBorder(radius=5),
+                                },
+                                padding=20,
+                            )
+                        )
+                    ),
+                    Container(
+                        width=300,
+                        margin=margin.only(left=20, right=20, top=15),
+                        content=Text(
+                            "Or use social media account for login",
+                            size=14,
+                            text_align="center",
+                            color="#000000",
+                        )
+                    ),
+                    Container(
+                        width=300,
+                        margin=margin.only(left=20, right=20, top=15),
+                        content=Row(
+                            controls=[
+                                Container(
+                                    Image(
+                                        r"assets\facebook.png",
+                                        width=48,
+                                    ),
+                                    margin=margin.only(right=10),
+                                    # you can use this as button using on_click
+                                    on_click = lambda _: print("facebook")  # respected function here
+                                ),
+                                Container(
+                                    Image(
+                                        r"assets\google.png",
+                                        width=48,
+                                    ),
+                                    margin=margin.only(right=10),
+                                    # you can use this as button using on_click
+                                    on_click = lambda _: print("google")  # respected function here
+                                ),
+                                Container(
+                                    Image(
+                                        r"assets\gmail.png",
+                                        width=48,
+                                    ),
+                                    margin=margin.only(right=10),
+                                    # you can use this as button using on_click
+                                    on_click=lambda _: print("gmail")  # respected function here
+                                ),
+                            ],
+                            alignment=MainAxisAlignment.CENTER,
+                        )
+                    )
+
+                ]
+            )
+        )
+        return ctx
 
     def create_main_view(self):
         """
@@ -245,56 +454,6 @@ class FrontEnd:
             [
                 self.create_menu(),
                 self.create_page_body()
-            ],
-        )
-
-    def create_button(self, text, func, icon="", ref="", disabled=False):
-        """
-            Create a button with optional parameters.
-
-            Args:
-                text (str): The text to display on the button.
-                func (callable): The function to execute when the button is clicked.
-                icon (str, optional): The icon to display on the button.
-                ref (Ref, optional): A reference to associate with the button.
-                disabled (bool, optional): Whether the button should be initially disabled.
-
-            Returns:
-                ElevatedButton: The created button.
-            """
-        print("CREATING BUTTON")
-        print("The func ref:\t", func)
-        return ElevatedButton(
-            text,
-            on_click=func,
-            icon=icon,
-            ref=ref,
-            disabled=disabled
-        )
-
-    def create_custom_view(self, result, view_path, view_name, view_function):
-        """
-        Create a custom view for a specific route.
-
-        Args:
-            result (Component): The result component for the custom view.
-            view_path (str): The route path for the custom view.
-            view_name (str): The name of the custom view.
-            view_function (callable): The function to execute when the "Submit" button is clicked.
-
-        Returns:
-            View: The custom view.
-        """
-        return View(
-            view_path,
-            [
-                AppBar(
-                    title=Text(view_name),
-                    bgcolor=colors.SURFACE_VARIANT
-                ),
-                Text("This is the " + view_name + " Page"),
-                result,
-                self.create_button("Submit", view_function)
             ],
         )
 
@@ -351,7 +510,7 @@ class FrontEnd:
             error_message (str): The error message to display.
         """
         # Create an error alert dialog with the given title and error message
-        error_dialog = self.create_simple_alert_dialog(title_text, error_message)
+        error_dialog = create_simple_alert_dialog(title_text, error_message)
 
         # Show the error dialog
         self.open_dlg(error_dialog)
@@ -401,13 +560,13 @@ class FrontEnd:
                     bgcolor=colors.SURFACE_VARIANT
                 ),
                 Text("This is the " + view_name + " Page"),
-                self.create_button(
+                create_button(
                     "Select files...",
                     lambda _: self.file_picker.pick_files(allow_multiple=True),
                     icon=icons.FOLDER_OPEN
                 ),
                 Column(ref=self.files),
-                self.create_button("Upload", self.upload_files, icons.UPLOAD, self.upload_button, True)
+                create_button("Upload", self.upload_files, icons.UPLOAD, self.upload_button, True)
             ],
         )
 
@@ -421,30 +580,9 @@ class FrontEnd:
         dlg.open = False
         self.page.update()
 
-    def create_simple_alert_dialog(self, title, content_text, dismiss_func=lambda e: print("Dialog dismissed!"), alignment=MainAxisAlignment.END):
-        return AlertDialog(
-            title=Text(title),
-            content=Text(content_text),
-            on_dismiss=dismiss_func,
-            actions_alignment=alignment
-        )
-
-    def create_modal_alert_dialog(self, title, content_text, yes_func, no_func, dismiss_func=lambda e: print("Modal dialog dismissed!"), alignment=MainAxisAlignment.END):
-        return AlertDialog(
-            modal=True,
-            title=Text(title),
-            content=Text(content_text),
-            actions=[
-                TextButton("Yes", on_click=yes_func),
-                TextButton("No", on_click=no_func),
-            ],
-            actions_alignment=alignment,
-            on_dismiss=dismiss_func,
-        )
-
     def show_simple_alert_dialog(self, title_text, content_text, is_auto_closed=True, delay=2):
         # Create an alert dialog with the given title and content
-        alert_dialog = self.create_simple_alert_dialog(title_text, content_text)
+        alert_dialog = create_simple_alert_dialog(title_text, content_text)
 
         # Show the dialog
         self.open_dlg(alert_dialog)
@@ -456,7 +594,7 @@ class FrontEnd:
 
     def show_modal_alert_dialog(self, title_text, content_text, yes_func, no_func):
         # Create an alert dialog with the given title and content
-        alert_dialog = self.create_modal_alert_dialog(title_text, content_text, yes_func, no_func)
+        alert_dialog = create_modal_alert_dialog(title_text, content_text, yes_func, no_func)
 
         # Show the dialog
         self.open_dlg(alert_dialog)
@@ -475,14 +613,14 @@ class FrontEnd:
             self.txt_url = TextField(label="Enter song URL")
             print("INITIALIZING TEXT URL WITH THE TEXT", self.txt_url.value)
             self.page.views.append(
-                self.create_custom_view(self.txt_url, "/audio", "Audio URL", self.submit_audio)
+                create_custom_view(self.txt_url, "/audio", "Audio URL", self.submit_audio)
             )
             print("View is created.")
 
         if self.page.route == "/playlist":
             self.txt_url = TextField(label="Enter playlist URL")
             self.page.views.append(
-                self.create_custom_view(self.txt_url, "/playlist", "Playlist URL", self.submit_playlist)
+                create_custom_view(self.txt_url, "/playlist", "Playlist URL", self.submit_playlist)
             )
 
         if self.page.route == "/audio/upload":
@@ -504,7 +642,21 @@ class FrontEnd:
         if self.page.route == "/playlist/download":
             self.txt_url = TextField(label="Enter playlist URL")
             self.page.views.append(
-                self.create_custom_view(self.txt_url, "/playlist/download", "Download Playlist", self.download_audio)
+                self.create_custom_view(self.txt_url, "/playlist/download", "Download Playlist", self.download_playlist)
+            )
+
+        if self.page.route == "/login":
+            print("login")
+            self.txt_url = TextField(label="Log In")
+            self.page.views.append(
+                create_custom_view(self.txt_url, "/login", "Log In", self.submit_playlist)
+            )
+
+        if self.page.route == "/register":
+            print("register")
+            self.txt_url = TextField(label="Register")
+            self.page.views.append(
+                create_custom_view(self.txt_url, "/register", "Register", self.submit_playlist)
             )
 
         self.page.update()
