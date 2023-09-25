@@ -69,6 +69,15 @@ class FrontEnd:
         # self.page.theme = theme.Theme(color_scheme_seed="green")
         self.page.theme_mode = "light"
 
+        self.isLogin = Text("Login",
+                       weight="bold",
+                       color="white",
+                       size=20,
+
+                       offset=transform.Offset(0,0),
+                       animate_offset=animation.Animation(duration=300)
+                       )
+
         # Define route buttons
         # Audio URL PopupMenuItem
         self.audio_url_icon_button = create_icon_button(
@@ -193,15 +202,9 @@ class FrontEnd:
                         ),
                         PopupMenuButton(),
                         PopupMenuItem(
-                            text="Register",
-                            icon=icons.SUPERVISED_USER_CIRCLE,
-                            on_click=lambda _: self.page.go("/register")
-                        ),
-                        PopupMenuButton(),
-                        PopupMenuItem(
                             text="Log In",
                             icon=icons.ACCESSIBILITY_NEW,
-                            on_click=lambda _: self.page.go("/login")
+                            on_click=lambda _: self.page.go("/")
                         )
                     ],
                 )
@@ -218,34 +221,25 @@ class FrontEnd:
         self.page.vertical_alignment="center"
         self.page.horizontal_alignment="center"
 
-        isLogin = Text("Login",
-                       weight="bold",
-                       color="white",
-                       size=20,
-
-                       offset=transform.Offset(0,0),
-                       animate_offset=animation.Animation(duration=300)
-                       )
-
         # Logic register button
         def ganti(e):
             # Animation of the ctx container
 
-            ctx.bgcolor = "blue" if isLogin.value == "Login" else "red"
-            ctx.height = 800 if isLogin.value == "Login" else 150
-            ctx.width = 300 if isLogin.value == "Login" else 200
-            ctx.border_radius = 0 if isLogin.value == "Login" else 100
+            ctx.bgcolor = "blue" if self.isLogin.value == "Login" else "red"
+            ctx.height = 800 if self.isLogin.value == "Login" else 150
+            ctx.width = 300 if self.isLogin.value == "Login" else 200
+            ctx.border_radius = 0 if self.isLogin.value == "Login" else 100
 
             # isLogin animation
-            isLogin.value = "Register" if isLogin.value == "Login" else "Login"
-            isLogin.offset = transform.Offset(5, 0) if isLogin.value == "Login" else transform.Offset(0, 0)
+            self.isLogin.value = "Register" if self.isLogin.value == "Login" else "Login"
+            self.isLogin.offset = transform.Offset(5, 0) if self.isLogin.value == "Login" else transform.Offset(0, 0)
 
             # register animation button hide and show
-            register_btn.value = "Register" if isLogin.value == "Login" else "Login"
-            register_btn.offset = transform.Offset(0, 0) if isLogin.value == "Login" else transform.Offset(5, 0)
+            register_btn.value = "Register" if self.isLogin.value == "Login" else "Login"
+            register_btn.offset = transform.Offset(0, 0) if self.isLogin.value == "Login" else transform.Offset(5, 0)
 
             # Show hide you register form here
-            txt_box_register.visible = True if isLogin.value == "Register" else False
+            # txt_box_register.visible = True if self.isLogin.value == "Register" else False
 
             self.page.update()
 
@@ -268,7 +262,7 @@ class FrontEnd:
         )
 
         # Set Register is hidden
-        txt_box_register.visible = False
+        # txt_box_register.visible = False
 
         # Register button
         register_btn = ElevatedButton("Register",
@@ -282,7 +276,6 @@ class FrontEnd:
             alignment=alignment.center,
             border_radius=100,
             padding=20,
-            width=1000,
             height=800,
             animate=animation.Animation(duration=300, curve="easyInOut"),
             content=Column(
@@ -294,7 +287,8 @@ class FrontEnd:
                             "Create Account",
                             style=ButtonStyle(
                                 color="#000000"
-                            )
+                            ),
+                            on_click=lambda _: self.page.go("/register")
                         )
                     ),
                     Container(
@@ -412,7 +406,7 @@ class FrontEnd:
                                     ),
                                     margin=margin.only(right=10),
                                     # you can use this as button using on_click
-                                    on_click = lambda _: print("facebook")  # respected function here
+                                    on_click=lambda _: print("facebook")  # respected function here
                                 ),
                                 Container(
                                     Image(
@@ -421,7 +415,7 @@ class FrontEnd:
                                     ),
                                     margin=margin.only(right=10),
                                     # you can use this as button using on_click
-                                    on_click = lambda _: print("google")  # respected function here
+                                    on_click=lambda _: print("google")  # respected function here
                                 ),
                                 Container(
                                     Image(
@@ -654,9 +648,112 @@ class FrontEnd:
 
         if self.page.route == "/register":
             print("register")
-            self.txt_url = TextField(label="Register")
+            self.txt_url = TextField(label="Sign Up")
             self.page.views.append(
-                create_custom_view(self.txt_url, "/register", "Register", self.submit_playlist)
+                View(
+                    "/register",
+                    [
+                        AppBar(
+                            title=Text("Register"),
+                            bgcolor=colors.SURFACE_VARIANT
+                        ),
+                        # self.isLogin,
+                        Container(
+                            width=320,
+                            margin=margin.only(left=110, right=10),
+                            alignment=alignment.center,
+                            content=Text(
+                                "Please enter your information below in order to create a new account",
+                                text_align="center",
+                                size=14,
+                                color="#000000"
+                            )
+                        ),
+                        Container(
+                            width=300,
+                            margin=margin.only(left=20, right=20, top=15),
+                            content=Column(
+                                controls=[
+                                    Text(
+                                        "Username",
+                                        size=14,
+                                        color="#000000",
+                                    ),
+                                    TextField(
+                                        border_radius=15,
+                                        border_color=colors.BLACK,
+                                        focused_border_color=colors.ORANGE_700,
+                                        text_style=TextStyle(
+                                            color="#000000",
+                                        )
+                                    ),
+                                    Text(
+                                        "Email",
+                                        size=14,
+                                        color="#000000",
+                                    ),
+                                    TextField(
+                                        border_radius=15,
+                                        border_color=colors.BLACK,
+                                        focused_border_color=colors.ORANGE_700,
+                                        text_style=TextStyle(
+                                            color="#000000",
+                                        )
+                                    ),
+                                    Text(
+                                        "Password",
+                                        size=14,
+                                        color="#000000",
+                                    ),
+                                    TextField(
+                                        password=True,
+                                        can_reveal_password=True,
+                                        border_radius=15,
+                                        border_color=colors.BLACK,
+                                        focused_border_color=colors.ORANGE_700,
+                                        text_style=TextStyle(
+                                            color="#000000",
+                                        )
+                                    ),
+                                    Text(
+                                        "Confirm Password",
+                                        size=14,
+                                        color="#000000",
+                                    ),
+                                    TextField(
+                                        password=True,
+                                        can_reveal_password=True,
+                                        border_radius=15,
+                                        border_color=colors.BLACK,
+                                        focused_border_color=colors.ORANGE_700,
+                                        text_style=TextStyle(
+                                            color="#000000",
+                                        )
+                                    ),
+                                ]
+                            )
+                        ),
+                        Container(
+                            width=300,
+                            margin=margin.only(left=20, right=20, top=10),
+                            content=ElevatedButton(
+                                "Sign Up",
+                                width=300,
+                                height=55,
+                                style=ButtonStyle(
+                                    bgcolor=colors.ORANGE_700,
+                                    color=colors.WHITE,
+                                    shape={
+                                        MaterialState.FOCUSED: RoundedRectangleBorder(radius=15),
+                                        MaterialState.DEFAULT: RoundedRectangleBorder(radius=15),
+                                        MaterialState.HOVERED: RoundedRectangleBorder(radius=15),
+                                    }
+                                )
+                            )
+                        )
+                    ],
+                )
+
             )
 
         self.page.update()
