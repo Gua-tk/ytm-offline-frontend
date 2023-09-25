@@ -69,15 +69,6 @@ class FrontEnd:
         # self.page.theme = theme.Theme(color_scheme_seed="green")
         self.page.theme_mode = "light"
 
-        self.isLogin = Text("Login",
-                       weight="bold",
-                       color="white",
-                       size=20,
-
-                       offset=transform.Offset(0,0),
-                       animate_offset=animation.Animation(duration=300)
-                       )
-
         # Define route buttons
         # Audio URL PopupMenuItem
         self.audio_url_icon_button = create_icon_button(
@@ -218,58 +209,8 @@ class FrontEnd:
         Returns:
             Text: A Text component representing the main content.
         """
-        self.page.vertical_alignment="center"
-        self.page.horizontal_alignment="center"
-
-        # Logic register button
-        def ganti(e):
-            # Animation of the ctx container
-
-            ctx.bgcolor = "blue" if self.isLogin.value == "Login" else "red"
-            ctx.height = 800 if self.isLogin.value == "Login" else 150
-            ctx.width = 300 if self.isLogin.value == "Login" else 200
-            ctx.border_radius = 0 if self.isLogin.value == "Login" else 100
-
-            # isLogin animation
-            self.isLogin.value = "Register" if self.isLogin.value == "Login" else "Login"
-            self.isLogin.offset = transform.Offset(5, 0) if self.isLogin.value == "Login" else transform.Offset(0, 0)
-
-            # register animation button hide and show
-            register_btn.value = "Register" if self.isLogin.value == "Login" else "Login"
-            register_btn.offset = transform.Offset(0, 0) if self.isLogin.value == "Login" else transform.Offset(5, 0)
-
-            # Show hide you register form here
-            # txt_box_register.visible = True if self.isLogin.value == "Register" else False
-
-            self.page.update()
-
-        txt_box_register = Container(
-            content=Column([
-                TextField(label="Username",
-                          border_color="white",
-                          color="white",
-                          ),
-                TextField(label="Password",
-                          border_color="white",
-                          color="white",
-                          ),
-                # Login Button
-                ElevatedButton(
-                    width=self.page.window_width,
-                    on_click=ganti
-                )
-            ])
-        )
-
-        # Set Register is hidden
-        # txt_box_register.visible = False
-
-        # Register button
-        register_btn = ElevatedButton("Register",
-                                      on_click=ganti,
-                                      offset=transform.Offset(0,0),
-                                      animate_offset=animation.Animation(duration=300)
-        )
+        self.page.vertical_alignment = "center"
+        self.page.horizontal_alignment = "center"
 
         ctx = Container(
             bgcolor="red",
@@ -657,7 +598,6 @@ class FrontEnd:
                             title=Text("Register"),
                             bgcolor=colors.SURFACE_VARIANT
                         ),
-                        # self.isLogin,
                         Container(
                             width=320,
                             margin=margin.only(left=110, right=10),
