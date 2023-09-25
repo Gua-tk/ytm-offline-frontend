@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+from uuid import UUID
+
+import uuid as uuid
 from flet import (
     AppBar,
     ElevatedButton,
@@ -30,7 +33,6 @@ from flet import (
     AppView
 )
 import requests
-from flet_core import theme
 from typing import Dict
 from time import sleep
 
@@ -49,14 +51,15 @@ def make_post_request(url, data):
     try:
         response = requests.post(url, json=data)
         response.raise_for_status()  # Raise an exception for HTTP errors (non-2xx status codes)
-        return response.json()  # Return response data in JSON format
+        return response  # Return response data in JSON format
     except requests.exceptions.RequestException as e:
         print("POST request failed:", e)
         return None
 
 
 class FrontEnd:
-    def __init__(self, page: Page, host_address, host_port):
+    def __init__(self, page: Page, host_address, host_port, self_host_address, self_host_port):
+        self.txt_url: TextField = None
         self.page = page
         self.page.title = "ytm-manager"
 
@@ -107,20 +110,20 @@ class FrontEnd:
 
         # Audio Upload 2 PopupMenuItem
         self.audio_upload_2_icon_button = self.create_icon_button(
-            lambda _: self.page.go("/audio/upload2"),
-            "Audio Upload 2",
-            icons.UPLOAD,  # Replace with the appropriate icon for Audio Upload 2
-            icons.UPLOAD_OUTLINED,  # Replace with the appropriate outlined icon
+            lambda _: self.page.go("/audio/download"),
+            "Download Audio",
+            icons.DOWNLOAD,  # Replace with the appropriate icon for Audio Upload 2
+            icons.DOWNLOAD_DONE_OUTLINED,  # Replace with the appropriate outlined icon
             colors.GREY,
             colors.RED
         )
 
         # Playlist Upload 2 PopupMenuItem
         self.playlist_upload_2_icon_button = self.create_icon_button(
-            lambda _: self.page.go("/playlist/upload2"),
-            "Playlist Upload 2",
-            icons.UPLOAD,  # Replace with the appropriate icon for Playlist Upload 2
-            icons.UPLOAD_OUTLINED,  # Replace with the appropriate outlined icon
+            lambda _: self.page.go("/playlist/download"),
+            "Download Playlist",
+            icons.DOWNLOADING,  # Replace with the appropriate icon for Playlist Upload 2
+            icons.DOWNLOAD_FOR_OFFLINE,  # Replace with the appropriate outlined icon
             colors.GREY,
             colors.RED
         )
@@ -134,6 +137,9 @@ class FrontEnd:
 
         self.host_address = host_address
         self.host_port = host_port
+
+        self.self_host_address = self_host_address
+        self.self_host_port = self_host_port
 
         self.prog_bars: Dict[str, ProgressRing] = {}
         self.files = Ref[Column]()
@@ -200,6 +206,18 @@ class FrontEnd:
                             text="Dark Mode",
                             icon=icons.DARK_MODE,
                             on_click=self.toggle_dark_mode
+                        ),
+                        PopupMenuButton(),
+                        PopupMenuItem(
+                            text="Sign In",
+                            icon=icons.SUPERVISED_USER_CIRCLE,
+                            on_click=self.toggle_dark_mode
+                        ),
+                        PopupMenuButton(),
+                        PopupMenuItem(
+                            text="Create Account",
+                            icon=icons.ACCESSIBILITY_NEW,
+                            on_click=self.toggle_dark_mode
                         )
                     ],
                 )
@@ -244,6 +262,8 @@ class FrontEnd:
             Returns:
                 ElevatedButton: The created button.
             """
+        print("CREATING BUTTON")
+        print("The func ref:\t", func)
         return ElevatedButton(
             text,
             on_click=func,
@@ -274,7 +294,7 @@ class FrontEnd:
                 ),
                 Text("This is the " + view_name + " Page"),
                 result,
-                self.create_button("Submit", lambda _: view_function)
+                self.create_button("Submit", view_function)
             ],
         )
 
@@ -321,6 +341,20 @@ class FrontEnd:
             self.show_simple_alert_dialog("Files Uploaded",
                                    f"All {self.total_files_to_upload} files have been uploaded!",
                                    False)
+
+    def show_error_dialog(self, title_text, error_message):
+        """
+        Show an error dialog with a title and error message.
+
+        Args:
+            title_text (str): The title of the error dialog.
+            error_message (str): The error message to display.
+        """
+        # Create an error alert dialog with the given title and error message
+        error_dialog = self.create_simple_alert_dialog(title_text, error_message)
+
+        # Show the error dialog
+        self.open_dlg(error_dialog)
 
     def increment_uploaded_files_count(self):
         self.successfully_uploaded_files += 1
@@ -438,15 +472,17 @@ class FrontEnd:
         self.page.views.append(self.create_main_view())
 
         if self.page.route == "/audio":
-            txt_url = TextField(label="Enter song URL")
+            self.txt_url = TextField(label="Enter song URL")
+            print("INITIALIZING TEXT URL WITH THE TEXT", self.txt_url.value)
             self.page.views.append(
-                self.create_custom_view(txt_url, "/audio", "Audio URL", self.submit_audio(txt_url.value))
+                self.create_custom_view(self.txt_url, "/audio", "Audio URL", self.submit_audio)
             )
+            print("View is created.")
 
         if self.page.route == "/playlist":
-            txt_url = TextField(label="Enter playlist URL")
+            self.txt_url = TextField(label="Enter playlist URL")
             self.page.views.append(
-                self.create_custom_view(txt_url, "/playlist", "Playlist URL", self.submit_playlist(txt_url.value))
+                self.create_custom_view(self.txt_url, "/playlist", "Playlist URL", self.submit_playlist)
             )
 
         if self.page.route == "/audio/upload":
@@ -459,14 +495,17 @@ class FrontEnd:
                 self.create_custom_upload_file_view("/playlist/upload", "Upload .zip playlist")
             )
 
-        if self.page.route == "/audio/upload2":
+        if self.page.route == "/audio/download":
+            self.txt_url = TextField(label="Enter playlist URL")
             self.page.views.append(
-                self.create_custom_upload_file_view("/audio/upload2", "Upload .mp3 audio")
+                self.create_custom_view(self.txt_url, "/audio/download", "Download Audio", self.download_audio)
             )
 
-        if self.page.route == "/playlist/upload2":
+        if self.page.route == "/playlist/download":
+            self.txt_url = TextField(label="Enter playlist URL")
             self.page.views.append(
-                self.create_custom_upload_file_view("/playlist/upload2", "Upload .zip playlist"))
+                self.create_custom_view(self.txt_url, "/playlist/download", "Download Playlist", self.download_audio)
+            )
 
         self.page.update()
 
@@ -489,9 +528,7 @@ class FrontEnd:
             txt_url (str): The entered audio URL.
             e: The event object (not used).
         """
-        print(txt_url)
-        self.make_audio_upload_request(txt_url)
-        print("DONE")
+        self.make_audio_upload_request(self.txt_url.value)
 
     def submit_playlist(self, txt_url, e=None):
         """
@@ -501,19 +538,46 @@ class FrontEnd:
             txt_url (str): The entered playlist URL.
             e: The event object (not used).
         """
-        self.make_playlist_upload_request(txt_url)
+        print("HERE WE SUBMIT THE PLAYLIST")
+        self.make_playlist_upload_request(self.txt_url.value)
         print("DONE")
+
+    def download_audio(self, empty):
+        """
+
+
+        :return:
+        """
+        self.make_download_audio_request(self.txt_url.value)
+
+    def download_playlist(self, empty):
+        self.make_download_playlist_request(self.txt_url.value)
 
     def make_audio_upload_request(self, link):
         """
         Make a POST request to upload an audio file.
 
-        Args:
+        Args:make_audio_upload_request
             link (str): The audio URL to upload.
         """
+        print("MAKE AUDIO UPLOAD REQUEST")
         request_data = {"audio_url": link}
-        response = make_post_request('http://' + self.host_address + ':' + self.host_port + '/audio/upload', request_data)
+        print("the request data:\n", request_data)
+        response = make_post_request('http://' + self.host_address + ':' + self.host_port + '/api/global/uploadAudio', request_data)
         print("RESPONSE:\t", response)
+        if response is None:
+            # If the request failed, show an error dialog
+            self.show_error_dialog("Error", "Failed to upload audio.")
+        elif response.status_code == 200:
+            #  TODO: Success dialog with a custom message
+            print(200)
+            self.show_simple_alert_dialog("File uploaded!", "Audio uploaded successfully.", True, 10)
+        elif response.status_code == 401:
+            # If the request failed, show an error dialog
+            self.show_error_dialog("Unauthorized", "The audio was not uploaded because your YouTube Music token was not authorized to do the upload."
+                                                   "Refresh your token and try again.")
+        else:
+            self.show_error_dialog("Error", "There server responded:\t" + str(response.status_code))
 
     def make_playlist_upload_request(self, link):
         """
@@ -522,12 +586,104 @@ class FrontEnd:
         Args:
             link (str): The playlist URL to upload (not implemented).
         """
-        pass
+        print("MAKE AUDIO UPLOAD REQUEST")
+        request_data = {"playlist_url": link}
+        print("the request data:\n", request_data)
+        response = make_post_request('http://' + self.host_address + ':' + self.host_port + '/api/global/uploadPlaylist',
+                                     request_data)
+        print("RESPONSE:\t", response)
+        if response is None:
+            # If the request failed, show an error dialog
+            self.show_error_dialog("Error", "Failed to upload playlist.")
+        elif response.status_code == 200:
+            #  TODO: Success dialog with a custom message
+            print(200)
+            self.show_simple_alert_dialog("Playlist uploaded!", "Success.", True, 10)
+        elif response.status_code == 401:
+            # If the request failed, show an error dialog
+            self.show_error_dialog("Unauthorized",
+                                   "The playlist was not uploaded because your YouTube Music token was not authorized to do the upload."
+                                   "Refresh your token and try again.")
+        else:
+            self.show_error_dialog("Error", "There server responded:\t" + str(response.status_code))
+
+    def make_download_audio_request(self, link):
+        """
+        Make a POST request to download an audio.
+
+        Args:
+            link (str): The playlist URL to upload (not implemented).
+        """
+        print("MAKE AUDIO DOWNLOAD REQUEST")
+        request_data = {"audio_url": link}
+        print("the request data:\n", request_data)
+        response = make_post_request(
+            'http://' + self.host_address + ':' + self.host_port + '/api/global/downloadAudio',
+            request_data)
+        print("RESPONSE:\t", response)
+        if response is None:
+            # If the request failed, show an error dialog
+            self.show_error_dialog("Error", "Failed to download audio.")
+        elif response.status_code == 200:
+            #  TODO: Success dialog with a custom message
+            print(200)
+            self.show_simple_alert_dialog("Audio downloaded!", "Success.", True, 10)
+            data = response.content
+            file_name = uuid.uuid4()
+            with open("assets/uploads/" + str(file_name), 'wb') as s:
+                s.write(data)
+
+            url = "http://" + self.self_host_address + ":" +  self.self_host_port + "/assets/uploads/" + str(file_name)
+            self.page.launch_url(url)
+        elif response.status_code == 401:
+            # If the request failed, show an error dialog
+            self.show_error_dialog("Unauthorized",
+                                   "The audio was not downloaded")
+        else:
+            self.show_error_dialog("Error", "There server responded:\t" + str(response.status_code))
+
+    def make_download_playlist_request(self, link):
+        """
+        Make a POST request to download a playlist.
+
+        Args:
+            link (str): The playlist URL to upload (not implemented).
+        """
+        print("MAKE PLAYLIST DOWNLOAD REQUEST")
+        request_data = {"audio_url": link}
+        print("the request data:\n", request_data)
+        response = make_post_request(
+            'http://' + self.host_address + ':' + self.host_port + '/api/global/downloadPlaylist',
+            request_data)
+        print("RESPONSE:\t", response)
+        if response is None:
+            # If the request failed, show an error dialog
+            self.show_error_dialog("Error", "Failed to download playlist.")
+        elif response.status_code == 200:
+            #  TODO: Success dialog with a custom message
+            print(200)
+            self.show_simple_alert_dialog("Playlist downloaded!", "Success.", True, 10)
+            data = response.content
+            file_name = uuid.uuid4()
+            with open("assets/uploads/" + str(file_name), 'wb') as s:
+                s.write(data)
+
+            url = "http://" + self.self_host_address + ":" +  self.self_host_port + "/assets/uploads/" + str(file_name)
+            self.page.launch_url(url)
+        elif response.status_code == 401:
+            # If the request failed, show an error dialog
+            self.show_error_dialog("Unauthorized",
+                                   "The playlist was not downloaded")
+        else:
+            self.show_error_dialog("Error", "There server responded:\t" + str(response.status_code))
 
 
 def main(page: Page):
     host_address = os.environ.get("BACKEND_HOST")
     host_port = os.environ.get("BACKEND_PORT")
+
+    self_host_address = os.environ.get("FRONTEND_HOST")
+    self_host_port = os.environ.get("FRONTEND_PORT")
 
     if host_address is None:
         host_address = "127.0.0.1"
@@ -535,7 +691,14 @@ def main(page: Page):
     if host_port is None:
         host_port = "5000"
 
-    frontend = FrontEnd(page, host_address, host_port)
+    if self_host_address is None:
+        self_host_address = "127.0.0.1"
+
+    if self_host_port is None:
+        self_host_port = "5010"
+
+
+    frontend = FrontEnd(page, host_address, host_port, self_host_address, self_host_port)
     page.go(page.route)
 
 
