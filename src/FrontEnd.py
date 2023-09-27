@@ -23,7 +23,7 @@ from flet import (
     margin,
     icons,
     animation,
-    transform,
+    Checkbox,
     ButtonStyle,
     TextStyle,
     MaterialState,
@@ -223,34 +223,12 @@ class FrontEnd:
                 controls=[
                     Container(
                         width=300,
-                        margin=margin.only(left=170, right=10, top=10),
-                        content=TextButton(
-                            "Create Account",
-                            style=ButtonStyle(
-                                color="#000000"
-                            ),
-                            on_click=lambda _: self.page.go("/register")
-                        )
-                    ),
-                    Container(
-                        width=300,
-                        margin=margin.only(left=110, right=10, top=25),
+                        margin=margin.only(left=135, right=10, top=25),
                         content=Text(
                             "Login",
                             size=30,
-                            color="#000000",
+                            color="white",
                             weight="w700"
-                        )
-                    ),
-                    Container(
-                        width=300,
-                        margin=margin.only(left=20, right=20, top=20),
-                        alignment=alignment.center,
-                        content=Text(
-                            "Please enter your information below in order to log in to your account",
-                            size=14,
-                            color="#000000",
-                            text_align="center"
                         )
                     ),
                     Container(
@@ -258,19 +236,25 @@ class FrontEnd:
                         margin=margin.only(left=20, right=20, top=35),
                         content=Column(
                             controls=[
-                                Text(
-                                    "Username",
-                                    size=14,
-                                    color="#000000"
-                                ),
-                                TextField(
-                                    text_style=TextStyle(
-                                        color="#000000"
+                                Row([
+                                    TextField(
+                                        hint_text="Username",
+                                        hint_style=TextStyle(
+                                            color="white"
+                                        ),
+                                        bgcolor="transparent",
+                                        text_style=TextStyle(
+                                            color="white"
+                                        ),
+                                        border_radius=15,
+                                        border_color=colors.BLACK,
+                                        focused_border_color=colors.WHITE70,
                                     ),
-                                    border_radius=15,
-                                    border_color=colors.BLACK,
-                                    focused_border_color=colors.WHITE70,
-                                )
+                                    Icon(
+                                        icons.PERSON_ROUNDED,
+                                        color="white"
+                                    )
+                                ])
                             ]
                         )
                     ),
@@ -279,34 +263,50 @@ class FrontEnd:
                         margin=margin.only(left=20, right=20, top=5),
                         content=Column(
                             controls=[
-                                Text(
-                                    "Password",
-                                    size=14,
-                                    color="#000000"
-                                ),
-                                TextField(
-                                    text_style=TextStyle(
-                                        color="#000000"
+                                Row([
+                                    TextField(
+                                        hint_text="Password",
+                                        hint_style=TextStyle(
+                                            color="white"
+                                        ),
+                                        bgcolor="transparent",
+                                        text_style=TextStyle(
+                                            color="white"
+                                        ),
+                                        password=True,
+                                        can_reveal_password=True,
+                                        border_radius=15,
+                                        border_color=colors.BLACK,
+                                        focused_border_color=colors.WHITE70,
                                     ),
-                                    password=True,
-                                    can_reveal_password=True,
-                                    border_radius=15,
-                                    border_color=colors.BLACK,
-                                    focused_border_color=colors.WHITE70,
-                                )
+                                    Icon(
+                                        icons.PASSWORD_ROUNDED,
+                                        color="white"
+                                    )
+                                ])
                             ]
                         )
                     ),
-                    Container(
-                        width=300,
-                        margin=margin.only(left=120),
-                        content=TextButton(
-                            "Forgot Password?",
-                            style=ButtonStyle(
-                                color="#000000",
+                    Row([
+                        Checkbox(
+                            value=False
+                        ),
+                        Text(
+                            "Remember me",
+                            color="white",
+                            size=14
+                        ),
+                        Container(
+                            width=150,
+                            margin=margin.only(left=25, right=10),
+                            content=TextButton(
+                                "Forgot Password?",
+                                style=ButtonStyle(
+                                    color="white",
+                                )
                             )
                         )
-                    ),
+                    ]),
                     Container(
                         width=300,
                         margin=margin.only(left=20, right=20, top=10),
@@ -315,7 +315,7 @@ class FrontEnd:
                             width=300,
                             height=55,
                             style=ButtonStyle(
-                                color="#ffffff",
+                                color="white",
                                 bgcolor=colors.ORANGE_700,
                                 shape={
                                     MaterialState.FOCUSED: RoundedRectangleBorder(radius=5),
@@ -329,48 +329,23 @@ class FrontEnd:
                         width=300,
                         margin=margin.only(left=20, right=20, top=15),
                         content=Text(
-                            "Or use social media account for login",
+                            "Don't have an account?",
                             size=14,
                             text_align="center",
-                            color="#000000",
+                            color="white",
                         )
                     ),
                     Container(
-                        width=300,
-                        margin=margin.only(left=20, right=20, top=15),
-                        content=Row(
-                            controls=[
-                                Container(
-                                    Image(
-                                        r"assets\facebook.png",
-                                        width=48,
-                                    ),
-                                    margin=margin.only(right=10),
-                                    # you can use this as button using on_click
-                                    on_click=lambda _: print("facebook")  # respected function here
-                                ),
-                                Container(
-                                    Image(
-                                        r"assets\google.png",
-                                        width=48,
-                                    ),
-                                    margin=margin.only(right=10),
-                                    # you can use this as button using on_click
-                                    on_click=lambda _: print("google")  # respected function here
-                                ),
-                                Container(
-                                    Image(
-                                        r"assets\gmail.png",
-                                        width=48,
-                                    ),
-                                    margin=margin.only(right=10),
-                                    # you can use this as button using on_click
-                                    on_click=lambda _: print("gmail")  # respected function here
-                                ),
-                            ],
-                            alignment=MainAxisAlignment.CENTER,
+                        width=150,
+                        margin=margin.only(left=100, right=20),
+                        content=TextButton(
+                            "Register",
+                            style=ButtonStyle(
+                                color="white"
+                            ),
+                            on_click=lambda _: self.page.go("/register")
                         )
-                    )
+                    ),
 
                 ]
             )
