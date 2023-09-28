@@ -9,7 +9,6 @@ from flet import (
     Container,
     Theme,
     FilePicker,
-    Icon,
     FilePickerResultEvent,
     FilePickerUploadEvent,
     FilePickerUploadFile,
@@ -23,7 +22,6 @@ from flet import (
     animation,
     Checkbox,
     ButtonStyle,
-    TextStyle,
     MaterialState,
     RoundedRectangleBorder,
     app,
@@ -79,10 +77,6 @@ class FrontEnd:
         self.page.title = "ytm-manager"
 
         # Configure the theme of the page
-        # self.page.theme = theme.Theme(color_scheme_seed="green")
-        #self.page.theme_mode = "light"
-        #self.theme_mode_icon = icons.DARK_MODE
-
         self.page.theme = Theme(font_family="JetBrainsMono")
         self.page.dark_theme = Theme(font_family="JetBrainsMono")
         self.theme_mode_text = "Dark Mode"
