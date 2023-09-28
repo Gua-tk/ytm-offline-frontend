@@ -7,11 +7,9 @@ from flet import (
     Page,
     View,
     Container,
-    TextField,
+    Theme,
     FilePicker,
     Icon,
-    PopupMenuButton,
-    PopupMenuItem,
     FilePickerResultEvent,
     FilePickerUploadEvent,
     FilePickerUploadFile,
@@ -27,7 +25,6 @@ from flet import (
     ButtonStyle,
     TextStyle,
     MaterialState,
-    Image,
     RoundedRectangleBorder,
     app,
     AppView
@@ -59,6 +56,22 @@ def make_post_request(url, data):
         return None
 
 
+def make_post_file_request(url, file):
+    """
+    Make a POST request to the specified file with JSON data.
+
+    Args:
+        url (str): The URL to send the POST request to.
+    """
+    try:
+        response = requests.post(url, files=file)
+        response.raise_for_status()  # Raise an exception for HTTP errors (non-2xx status codes)
+        return response  # Return response data in JSON format
+    except requests.exceptions.RequestException as e:
+        print("POST request failed:", e)
+        return None
+
+
 class FrontEnd:
     def __init__(self, page: Page, host_address, host_port, self_host_address, self_host_port):
         self.txt_url: TextField = None
@@ -67,7 +80,12 @@ class FrontEnd:
 
         # Configure the theme of the page
         # self.page.theme = theme.Theme(color_scheme_seed="green")
-        self.page.theme_mode = "light"
+        #self.page.theme_mode = "light"
+        #self.theme_mode_icon = icons.DARK_MODE
+
+        self.page.theme = Theme(font_family="JetBrainsMono")
+        self.page.dark_theme = Theme(font_family="JetBrainsMono")
+        self.theme_mode_text = "Dark Mode"
 
         # Define route buttons
         # Audio URL PopupMenuItem
@@ -113,7 +131,7 @@ class FrontEnd:
         # Audio Upload 2 PopupMenuItem
         self.audio_upload_2_icon_button = create_icon_button(
             lambda _: self.page.go("/audio/download"),
-            "Download Audio",
+            "Download Audio from YouTube Video",
             icons.DOWNLOAD,  # Replace with the appropriate icon for Audio Upload 2
             icons.DOWNLOAD_DONE_OUTLINED,  # Replace with the appropriate outlined icon
             colors.GREY,
@@ -123,7 +141,7 @@ class FrontEnd:
         # Playlist Upload 2 PopupMenuItem
         self.playlist_upload_2_icon_button = create_icon_button(
             lambda _: self.page.go("/playlist/download"),
-            "Download Playlist",
+            "Download Playlist from YouTube",
             icons.DOWNLOADING,  # Replace with the appropriate icon for Playlist Upload 2
             icons.DOWNLOAD_FOR_OFFLINE,  # Replace with the appropriate outlined icon
             colors.GREY,
@@ -156,9 +174,10 @@ class FrontEnd:
                                       on_upload=self.on_upload_progress)
         self.page.overlay.append(self.file_picker)
 
-    def toggle_dark_mode(self, e):
+    def change_theme(self, e):
         # Toggle between light and dark themes
         self.page.theme_mode = "light" if self.page.theme_mode == "dark" else "dark"
+
         self.page.update()
 
     def create_menu(self):
@@ -169,12 +188,10 @@ class FrontEnd:
             AppBar: The main menu bar.
         """
 
-        # dark_mode_switch = create_switch("Dark Mode", self.toggle_dark_mode)
-
         return AppBar(
-            leading=Icon(icons.DOWNLOAD_FOR_OFFLINE),
+            leading=create_simple_icon(icons.DOWNLOAD_FOR_OFFLINE),
             leading_width=40,
-            title=Text("ytm-offline"),
+            title=create_simple_text("ytm-manager"),
             center_title=False,
             bgcolor=colors.SURFACE_VARIANT,
             actions=[
@@ -184,31 +201,14 @@ class FrontEnd:
                 self.playlist_upload_icon_button,
                 self.audio_upload_2_icon_button,
                 self.playlist_upload_2_icon_button,
-                PopupMenuButton(
-                    items=[
-                        PopupMenuItem(
-                            text="Dark Mode",
-                            icon=icons.DARK_MODE,
-                            on_click=self.toggle_dark_mode
-                        ),
-                        PopupMenuButton(),
-                        PopupMenuItem(
-                            text="Log In",
-                            icon=icons.ACCESSIBILITY_NEW,
-                            on_click=lambda _: self.page.go("/")
-                        )
-                    ],
+                create_popup_menu_button(
+                    create_popup_menu_item("Theme", icons.DARK_MODE, self.change_theme),
+                    create_popup_menu_item("Log In", icons.ACCESSIBILITY_NEW, lambda _: self.page.go("/"))
                 )
             ]
         )
 
-    def create_page_body(self):
-        """
-        Create the main content of the page.
-
-        Returns:
-            Text: A Text component representing the main content.
-        """
+    def create_register_page_body(self):
         self.page.vertical_alignment = "center"
         self.page.horizontal_alignment = "center"
 
@@ -219,6 +219,106 @@ class FrontEnd:
             padding=20,
             height=800,
             animate=animation.Animation(duration=300, curve="easyInOut"),
+            content=Column(
+                controls=[
+                    Container(
+                        width=320,
+                        margin=margin.only(left=110, right=10),
+                        alignment=alignment.center,
+                        content=create_text(
+                            "Please enter your information below in order to create a new account",
+                            14
+                        )
+                    ),
+                    Container(
+                        width=300,
+                        margin=margin.only(left=20, right=20, top=15),
+                        content=Column(
+                            controls=[
+                                create_custom_textfield(
+                                    "Username",
+                                    create_text_style("grey"),
+                                    "white",
+                                    create_text_style("black"),
+                                    15,
+                                    colors.BLACK,
+                                    colors.ORANGE_700,
+                                ),
+                                create_custom_textfield(
+                                    "Email",
+                                    create_text_style("grey"),
+                                    "white",
+                                    create_text_style("black"),
+                                    15,
+                                    colors.BLACK,
+                                    colors.ORANGE_700,
+                                ),
+                                create_custom_textfield(
+                                    "Password",
+                                    create_text_style("grey"),
+                                    "white",
+                                    create_text_style("black"),
+                                    15,
+                                    colors.BLACK,
+                                    colors.ORANGE_700,
+                                    True,
+                                    True
+                                ),
+                                create_custom_textfield(
+                                    "Confirm Password",
+                                    create_text_style("grey"),
+                                    "white",
+                                    create_text_style("black"),
+                                    15,
+                                    colors.BLACK,
+                                    colors.ORANGE_700,
+                                    True,
+                                    True
+                                )
+                            ]
+                        )
+                    ),
+                    Container(
+                        width=300,
+                        margin=margin.only(left=20, right=20, top=10),
+                        content=ElevatedButton(
+                            "Sign Up",
+                            width=300,
+                            height=55,
+                            on_click=lambda _:print("CONFIRM SIGN UP"),
+                            style=ButtonStyle(
+                                bgcolor=colors.ORANGE_700,
+                                color=colors.WHITE,
+                                shape={
+                                    MaterialState.FOCUSED: RoundedRectangleBorder(radius=15),
+                                    MaterialState.DEFAULT: RoundedRectangleBorder(radius=15),
+                                    MaterialState.HOVERED: RoundedRectangleBorder(radius=15),
+                                }
+                            )
+                        )
+                    )
+                ]
+            )
+        )
+        return ctx
+
+    def create_page_body(self):
+        """
+        Create the main content of the page.
+        """
+        self.page.vertical_alignment = "center"
+        self.page.horizontal_alignment = "center"
+
+        ctx = Container(
+            bgcolor="red",
+            alignment=alignment.center,
+            border_radius=100,
+            padding=20,
+            height=800,
+            animate=animation.Animation(
+                duration=300,
+                curve="easyInOut"
+            ),
             content=Column(
                 controls=[
                     Container(
@@ -237,23 +337,16 @@ class FrontEnd:
                         content=Column(
                             controls=[
                                 Row([
-                                    TextField(
-                                        hint_text="Username",
-                                        hint_style=TextStyle(
-                                            color="white"
-                                        ),
-                                        bgcolor="transparent",
-                                        text_style=TextStyle(
-                                            color="white"
-                                        ),
-                                        border_radius=15,
-                                        border_color=colors.BLACK,
-                                        focused_border_color=colors.WHITE70,
+                                    create_custom_textfield(
+                                        "Username",
+                                        create_text_style("grey"),
+                                        "white",
+                                        create_text_style("black"),
+                                        15,
+                                        colors.BLACK,
+                                        colors.WHITE70
                                     ),
-                                    Icon(
-                                        icons.PERSON_ROUNDED,
-                                        color="white"
-                                    )
+                                    create_colored_icon(icons.PERSON_ROUNDED, color="white")
                                 ])
                             ]
                         )
@@ -264,38 +357,28 @@ class FrontEnd:
                         content=Column(
                             controls=[
                                 Row([
-                                    TextField(
-                                        hint_text="Password",
-                                        hint_style=TextStyle(
-                                            color="white"
-                                        ),
-                                        bgcolor="transparent",
-                                        text_style=TextStyle(
-                                            color="white"
-                                        ),
-                                        password=True,
-                                        can_reveal_password=True,
-                                        border_radius=15,
-                                        border_color=colors.BLACK,
-                                        focused_border_color=colors.WHITE70,
+                                    create_custom_textfield(
+                                        "Password",
+                                        create_text_style("grey"),
+                                        "white",
+                                        create_text_style("black"),
+                                        15,
+                                        colors.BLACK,
+                                        colors.WHITE70,
+                                        True,
+                                        True
                                     ),
-                                    Icon(
-                                        icons.PASSWORD_ROUNDED,
-                                        color="white"
-                                    )
+                                    create_colored_icon(icons.PASSWORD_ROUNDED, color="white")
                                 ])
                             ]
                         )
                     ),
                     Row([
                         Checkbox(
-                            value=False
+                            value=False,
+                            on_change=lambda _:print("checkbox toggle")
                         ),
-                        Text(
-                            "Remember me",
-                            color="white",
-                            size=14
-                        ),
+                        create_text("Remember me", 14, "white"),
                         Container(
                             width=150,
                             margin=margin.only(left=25, right=10),
@@ -303,7 +386,8 @@ class FrontEnd:
                                 "Forgot Password?",
                                 style=ButtonStyle(
                                     color="white",
-                                )
+                                ),
+                                on_click=lambda _:print("You forgot your password")
                             )
                         )
                     ]),
@@ -322,7 +406,8 @@ class FrontEnd:
                                     MaterialState.HOVERED: RoundedRectangleBorder(radius=5),
                                 },
                                 padding=20,
-                            )
+                            ),
+                            on_click=lambda _: print("LOGIN BUTTON PRESSET")
                         )
                     ),
                     Container(
@@ -367,6 +452,15 @@ class FrontEnd:
             ],
         )
 
+    def create_register_view(self):
+        return View(
+            "/register",
+            [
+                create_appbar("Register", colors.SURFACE_VARIANT),
+                self.create_register_page_body()
+            ]
+        )
+
     def file_picker_result(self, e: FilePickerResultEvent):
         """
         Handle file picker results.
@@ -405,11 +499,12 @@ class FrontEnd:
     def show_success_dialog(self):
         if self.total_files_to_upload == 1 and self.successfully_uploaded_files == self.total_files_to_upload:
             self.show_simple_alert_dialog("File Uploaded", "File has been uploaded!", False)
-            # self.show_modal_alert_dialog("File Uploaded", "File has been uploaded!", lambda _: self.close_dlg(), lambda _: self.close_dlg())
-        elif self.total_files_to_upload > 1 and self.successfully_uploaded_files == self.total_files_to_upload:
-            self.show_simple_alert_dialog("Files Uploaded",
-                                   f"All {self.total_files_to_upload} files have been uploaded!",
-                                   False)
+        elif 1 < self.total_files_to_upload == self.successfully_uploaded_files:
+            self.show_simple_alert_dialog(
+                "Files Uploaded",
+                f"All {self.total_files_to_upload} files have been uploaded!",
+                False
+            )
 
     def show_error_dialog(self, title_text, error_message):
         """
@@ -419,11 +514,8 @@ class FrontEnd:
             title_text (str): The title of the error dialog.
             error_message (str): The error message to display.
         """
-        # Create an error alert dialog with the given title and error message
-        error_dialog = create_simple_alert_dialog(title_text, error_message)
-
         # Show the error dialog
-        self.open_dlg(error_dialog)
+        open_dlg(self.page, create_simple_alert_dialog(title_text, error_message))
 
     def increment_uploaded_files_count(self):
         self.successfully_uploaded_files += 1
@@ -443,6 +535,7 @@ class FrontEnd:
         if self.file_picker.result is not None and self.file_picker.result.files is not None:
             self.total_files_to_upload = len(self.file_picker.result.files)  # Update the total count of files
             for f in self.file_picker.result.files:
+
                 upload_list.append(
                     FilePickerUploadFile(
                         f.name,
@@ -465,14 +558,14 @@ class FrontEnd:
         return View(
             view_path,
             [
-                AppBar(
-                    title=Text(view_name),
-                    bgcolor=colors.SURFACE_VARIANT
-                ),
-                Text("This is the " + view_name + " Page"),
+                create_appbar(view_name, colors.SURFACE_VARIANT),
+                create_simple_text("This is the " + view_name + " Page"),
                 create_button(
                     "Select files...",
-                    lambda _: self.file_picker.pick_files(allow_multiple=True),
+                    lambda _: self.file_picker.pick_files(
+                        allow_multiple=False,
+                        allowed_extensions=["mp3"],
+                    ),
                     icon=icons.FOLDER_OPEN
                 ),
                 Column(ref=self.files),
@@ -480,34 +573,24 @@ class FrontEnd:
             ],
         )
 
-    def open_dlg(self, dlg):
-        self.page.dialog = dlg
-        dlg.open = True
-        self.page.update()
-
-    def close_dlg(self):
-        dlg = self.page.dialog
-        dlg.open = False
-        self.page.update()
-
     def show_simple_alert_dialog(self, title_text, content_text, is_auto_closed=True, delay=2):
         # Create an alert dialog with the given title and content
         alert_dialog = create_simple_alert_dialog(title_text, content_text)
 
         # Show the dialog
-        self.open_dlg(alert_dialog)
+        open_dlg(self.page, alert_dialog)
 
         # Close the dialog and print the message when all files are uploaded
         if is_auto_closed:
             sleep(delay)
-            self.close_dlg()
+            close_dlg(self.page)
 
     def show_modal_alert_dialog(self, title_text, content_text, yes_func, no_func):
         # Create an alert dialog with the given title and content
         alert_dialog = create_modal_alert_dialog(title_text, content_text, yes_func, no_func)
 
         # Show the dialog
-        self.open_dlg(alert_dialog)
+        open_dlg(self.page, alert_dialog)
 
     def route_change(self, e=None):
         """
@@ -520,7 +603,7 @@ class FrontEnd:
         self.page.views.append(self.create_main_view())
 
         if self.page.route == "/audio":
-            self.txt_url = TextField(label="Enter song URL")
+            self.txt_url = create_simple_textfield("Enter song URL")
             print("INITIALIZING TEXT URL WITH THE TEXT", self.txt_url.value)
             self.page.views.append(
                 create_custom_view(self.txt_url, "/audio", "Audio URL", self.submit_audio)
@@ -528,7 +611,7 @@ class FrontEnd:
             print("View is created.")
 
         if self.page.route == "/playlist":
-            self.txt_url = TextField(label="Enter playlist URL")
+            self.txt_url = create_simple_textfield("Enter playlist URL")
             self.page.views.append(
                 create_custom_view(self.txt_url, "/playlist", "Playlist URL", self.submit_playlist)
             )
@@ -544,131 +627,27 @@ class FrontEnd:
             )
 
         if self.page.route == "/audio/download":
-            self.txt_url = TextField(label="Enter playlist URL")
+            self.txt_url = create_simple_textfield("Enter audio URL")
             self.page.views.append(
-                self.create_custom_view(self.txt_url, "/audio/download", "Download Audio", self.download_audio)
+                create_custom_view(self.txt_url, "/audio/download", "Download Audio", self.download_audio)
             )
 
         if self.page.route == "/playlist/download":
-            self.txt_url = TextField(label="Enter playlist URL")
+            self.txt_url = create_simple_textfield("Enter playlist URL")
             self.page.views.append(
-                self.create_custom_view(self.txt_url, "/playlist/download", "Download Playlist", self.download_playlist)
+                create_custom_view(self.txt_url, "/playlist/download", "Download Playlist", self.download_playlist)
             )
 
         if self.page.route == "/login":
             print("login")
-            self.txt_url = TextField(label="Log In")
+            self.txt_url = create_simple_textfield("Log In")
             self.page.views.append(
                 create_custom_view(self.txt_url, "/login", "Log In", self.submit_playlist)
             )
 
         if self.page.route == "/register":
-            print("register")
-            self.txt_url = TextField(label="Sign Up")
             self.page.views.append(
-                View(
-                    "/register",
-                    [
-                        AppBar(
-                            title=Text("Register"),
-                            bgcolor=colors.SURFACE_VARIANT
-                        ),
-                        Container(
-                            width=320,
-                            margin=margin.only(left=110, right=10),
-                            alignment=alignment.center,
-                            content=Text(
-                                "Please enter your information below in order to create a new account",
-                                text_align="center",
-                                size=14,
-                                color="#000000"
-                            )
-                        ),
-                        Container(
-                            width=300,
-                            margin=margin.only(left=20, right=20, top=15),
-                            content=Column(
-                                controls=[
-                                    Text(
-                                        "Username",
-                                        size=14,
-                                        color="#000000",
-                                    ),
-                                    TextField(
-                                        border_radius=15,
-                                        border_color=colors.BLACK,
-                                        focused_border_color=colors.ORANGE_700,
-                                        text_style=TextStyle(
-                                            color="#000000",
-                                        )
-                                    ),
-                                    Text(
-                                        "Email",
-                                        size=14,
-                                        color="#000000",
-                                    ),
-                                    TextField(
-                                        border_radius=15,
-                                        border_color=colors.BLACK,
-                                        focused_border_color=colors.ORANGE_700,
-                                        text_style=TextStyle(
-                                            color="#000000",
-                                        )
-                                    ),
-                                    Text(
-                                        "Password",
-                                        size=14,
-                                        color="#000000",
-                                    ),
-                                    TextField(
-                                        password=True,
-                                        can_reveal_password=True,
-                                        border_radius=15,
-                                        border_color=colors.BLACK,
-                                        focused_border_color=colors.ORANGE_700,
-                                        text_style=TextStyle(
-                                            color="#000000",
-                                        )
-                                    ),
-                                    Text(
-                                        "Confirm Password",
-                                        size=14,
-                                        color="#000000",
-                                    ),
-                                    TextField(
-                                        password=True,
-                                        can_reveal_password=True,
-                                        border_radius=15,
-                                        border_color=colors.BLACK,
-                                        focused_border_color=colors.ORANGE_700,
-                                        text_style=TextStyle(
-                                            color="#000000",
-                                        )
-                                    ),
-                                ]
-                            )
-                        ),
-                        Container(
-                            width=300,
-                            margin=margin.only(left=20, right=20, top=10),
-                            content=ElevatedButton(
-                                "Sign Up",
-                                width=300,
-                                height=55,
-                                style=ButtonStyle(
-                                    bgcolor=colors.ORANGE_700,
-                                    color=colors.WHITE,
-                                    shape={
-                                        MaterialState.FOCUSED: RoundedRectangleBorder(radius=15),
-                                        MaterialState.DEFAULT: RoundedRectangleBorder(radius=15),
-                                        MaterialState.HOVERED: RoundedRectangleBorder(radius=15),
-                                    }
-                                )
-                            )
-                        )
-                    ],
-                )
-
+                self.create_register_view()
             )
 
         self.page.update()
@@ -694,19 +673,18 @@ class FrontEnd:
         """
         self.make_audio_upload_request(self.txt_url.value)
 
-    def submit_playlist(self, txt_url, e=None):
+    def submit_playlist(self, e=None):
         """
         Handle playlist submission when the "Submit" button is clicked.
 
         Args:
-            txt_url (str): The entered playlist URL.
             e: The event object (not used).
         """
         print("HERE WE SUBMIT THE PLAYLIST")
         self.make_playlist_upload_request(self.txt_url.value)
         print("DONE")
 
-    def download_audio(self, empty):
+    def download_audio(self, e):
         """
 
 
@@ -714,8 +692,14 @@ class FrontEnd:
         """
         self.make_download_audio_request(self.txt_url.value)
 
-    def download_playlist(self, empty):
+    def download_playlist(self, e):
         self.make_download_playlist_request(self.txt_url.value)
+
+    def upload_audio(self):
+        self.make_audio_file_upload_request()
+
+    def upload_playlist(self):
+        self.make_playlist_file_upload_request(self.file_picker)
 
     def make_audio_upload_request(self, link):
         """
@@ -727,7 +711,10 @@ class FrontEnd:
         print("MAKE AUDIO UPLOAD REQUEST")
         request_data = {"audio_url": link}
         print("the request data:\n", request_data)
-        response = make_post_request('http://' + self.host_address + ':' + self.host_port + '/api/global/uploadAudio', request_data)
+        response = make_post_request(
+            'http://' + self.host_address + ':' + self.host_port + '/api/global/uploadAudio',
+            request_data
+        )
         print("RESPONSE:\t", response)
         if response is None:
             # If the request failed, show an error dialog
@@ -738,8 +725,11 @@ class FrontEnd:
             self.show_simple_alert_dialog("File uploaded!", "Audio uploaded successfully.", True, 10)
         elif response.status_code == 401:
             # If the request failed, show an error dialog
-            self.show_error_dialog("Unauthorized", "The audio was not uploaded because your YouTube Music token was not authorized to do the upload."
-                                                   "Refresh your token and try again.")
+            self.show_error_dialog(
+                "Unauthorized",
+                "The audio was not uploaded because your YouTube Music token was not authorized to do the upload."
+                "Refresh your token and try again."
+            )
         else:
             self.show_error_dialog("Error", "There server responded:\t" + str(response.status_code))
 
@@ -753,8 +743,10 @@ class FrontEnd:
         print("MAKE AUDIO UPLOAD REQUEST")
         request_data = {"playlist_url": link}
         print("the request data:\n", request_data)
-        response = make_post_request('http://' + self.host_address + ':' + self.host_port + '/api/global/uploadPlaylist',
-                                     request_data)
+        response = make_post_request(
+            'http://' + self.host_address + ':' + self.host_port + '/api/global/uploadPlaylist',
+            request_data
+        )
         print("RESPONSE:\t", response)
         if response is None:
             # If the request failed, show an error dialog
@@ -766,7 +758,8 @@ class FrontEnd:
         elif response.status_code == 401:
             # If the request failed, show an error dialog
             self.show_error_dialog("Unauthorized",
-                                   "The playlist was not uploaded because your YouTube Music token was not authorized to do the upload."
+                                   "The playlist was not uploaded because your YouTube Music token was not authorized "
+                                   "to do the upload."
                                    "Refresh your token and try again.")
         else:
             self.show_error_dialog("Error", "There server responded:\t" + str(response.status_code))
@@ -797,7 +790,7 @@ class FrontEnd:
             with open("assets/uploads/" + str(file_name), 'wb') as s:
                 s.write(data)
 
-            url = "http://" + self.self_host_address + ":" +  self.self_host_port + "/assets/uploads/" + str(file_name)
+            url = "http://" + self.self_host_address + ":" + self.self_host_port + "/assets/uploads/" + str(file_name)
             self.page.launch_url(url)
         elif response.status_code == 401:
             # If the request failed, show an error dialog
@@ -814,7 +807,7 @@ class FrontEnd:
             link (str): The playlist URL to upload (not implemented).
         """
         print("MAKE PLAYLIST DOWNLOAD REQUEST")
-        request_data = {"audio_url": link}
+        request_data = {"playlist_url": link}
         print("the request data:\n", request_data)
         response = make_post_request(
             'http://' + self.host_address + ':' + self.host_port + '/api/global/downloadPlaylist',
@@ -832,7 +825,7 @@ class FrontEnd:
             with open("assets/uploads/" + str(file_name), 'wb') as s:
                 s.write(data)
 
-            url = "http://" + self.self_host_address + ":" +  self.self_host_port + "/assets/uploads/" + str(file_name)
+            url = "http://" + self.self_host_address + ":" + self.self_host_port + "/assets/uploads/" + str(file_name)
             self.page.launch_url(url)
         elif response.status_code == 401:
             # If the request failed, show an error dialog
@@ -840,6 +833,21 @@ class FrontEnd:
                                    "The playlist was not downloaded")
         else:
             self.show_error_dialog("Error", "There server responded:\t" + str(response.status_code))
+
+    def make_audio_file_upload_request(self, file_picker_upload_file):
+        url = 'http://' + self.host_address + ':' + self.host_port + '/api/global/uploadReceivedAudio'
+        file_path = 'assets/uploads/' + file_picker_upload_file.name
+        with open(file_path, 'rb') as f:
+            r1 = {file_picker_upload_file.name: f}
+            response = make_post_file_request(
+                url,
+                r1
+            )
+        print("THE RESPONSE:")
+        print(response)
+
+    def make_playlist_file_upload_request(self, files):
+        pass
 
 
 def main(page: Page):
@@ -860,7 +868,6 @@ def main(page: Page):
 
     if self_host_port is None:
         self_host_port = "5010"
-
 
     frontend = FrontEnd(page, host_address, host_port, self_host_address, self_host_port)
     page.go(page.route)

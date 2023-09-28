@@ -9,9 +9,26 @@ from flet import (
     AlertDialog,
     MainAxisAlignment,
     View,
+    Icon,
     AppBar,
+    PopupMenuItem,
+    PopupMenuButton,
+    TextField,
+    TextStyle,
     colors,
 )
+
+
+def open_dlg(page, dlg):
+    page.dialog = dlg
+    dlg.open = True
+    page.update()
+
+
+def close_dlg(page):
+    dlg = page.dialog
+    dlg.open = False
+    page.update()
 
 
 def create_switch(label_text, func):
@@ -31,6 +48,17 @@ def create_icon_button(func, tooltip, icon, selected_icon, color, selected_color
         icon_size=icon_size,
         tooltip=tooltip,
         on_click=func,
+    )
+
+
+def create_simple_view(route_path, *controls):
+    items = []
+    for control in controls:
+        items.append(control)
+
+    return View(
+        route_path,
+        items
     )
 
 
@@ -106,4 +134,86 @@ def create_modal_alert_dialog(title, content_text, yes_func, no_func, dismiss_fu
         ],
         actions_alignment=alignment,
         on_dismiss=dismiss_func,
+    )
+
+
+def create_appbar(text, bg_color):
+    return AppBar(
+        title=Text(text),
+        bgcolor=bg_color
+    )
+
+
+def create_popup_menu_item(text, icon, func):
+    return PopupMenuItem(
+        text=text,
+        icon=icon,
+        on_click=func
+    )
+
+
+def create_popup_menu_button(*popup_menu_items):
+    menu_items = []
+
+    for popup_menu_item in popup_menu_items:
+        menu_items.append(popup_menu_item)
+        # Add an empty PopupMenuButton
+        menu_items.append(PopupMenuButton())
+
+    return PopupMenuButton(
+        items=menu_items[:-1]
+    )
+
+
+def create_simple_text(text):
+    return Text(
+        text
+    )
+
+
+def create_text(text, size, color="#000000"):
+    return Text(
+        text,
+        size=size,
+        color=color
+    )
+
+
+def create_text_style(color):
+    return TextStyle(
+        color=color
+    )
+
+
+def create_simple_textfield(label_text):
+    return TextField(
+        label=label_text
+    )
+
+
+def create_custom_textfield(hint_text, hint_style, bgcolor, text_style, border_radius, border_color,
+                            focused_border_color, password=False, can_reveal_password=False):
+    return TextField(
+        hint_text=hint_text,
+        hint_style=hint_style,
+        bgcolor=bgcolor,
+        text_style=text_style,
+        border_radius=border_radius,
+        border_color=border_color,
+        focused_border_color=focused_border_color,
+        password=password,
+        can_reveal_password=can_reveal_password,
+    )
+
+
+def create_simple_icon(icon):
+    return Icon(
+        icon
+    )
+
+
+def create_colored_icon(icon, color):
+    return Icon(
+        icon,
+        color=color
     )
