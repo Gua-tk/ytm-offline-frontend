@@ -72,6 +72,8 @@ def make_post_file_request(url, file):
 
 class FrontEnd:
     def __init__(self, page: Page, host_address, host_port, self_host_address, self_host_port):
+        self.email: Text = Text("")
+        self.password: Text = Text("")
         self.txt_url: TextField = None
         self.page = page
         self.page.title = "ytm-manager"
@@ -166,7 +168,7 @@ class FrontEnd:
         # Initialize the file picker
         self.file_picker = FilePicker(on_result=self.file_picker_result,
                                       on_upload=self.on_upload_progress)
-        self.page.overlay.append(self.file_picker)
+        self.page.overlay.append(self.file_picker),
 
     def change_theme(self, e):
         # Toggle between light and dark themes
@@ -202,6 +204,12 @@ class FrontEnd:
             ]
         )
 
+    def on_email_change(self, value):
+        self.email = value
+
+    def on_password_change(self, value):
+        self.password = value
+
     def create_register_page_body(self):
         self.page.vertical_alignment = "center"
         self.page.horizontal_alignment = "center"
@@ -230,15 +238,6 @@ class FrontEnd:
                         content=Column(
                             controls=[
                                 create_custom_textfield(
-                                    "Username",
-                                    create_text_style("grey"),
-                                    "white",
-                                    create_text_style("black"),
-                                    15,
-                                    colors.BLACK,
-                                    colors.ORANGE_700,
-                                ),
-                                create_custom_textfield(
                                     "Email",
                                     create_text_style("grey"),
                                     "white",
@@ -246,6 +245,7 @@ class FrontEnd:
                                     15,
                                     colors.BLACK,
                                     colors.ORANGE_700,
+                                    self.on_email_change
                                 ),
                                 create_custom_textfield(
                                     "Password",
@@ -255,20 +255,10 @@ class FrontEnd:
                                     15,
                                     colors.BLACK,
                                     colors.ORANGE_700,
+                                    self.on_password_change,
                                     True,
                                     True
                                 ),
-                                create_custom_textfield(
-                                    "Confirm Password",
-                                    create_text_style("grey"),
-                                    "white",
-                                    create_text_style("black"),
-                                    15,
-                                    colors.BLACK,
-                                    colors.ORANGE_700,
-                                    True,
-                                    True
-                                )
                             ]
                         )
                     ),
@@ -279,7 +269,7 @@ class FrontEnd:
                             "Sign Up",
                             width=300,
                             height=55,
-                            on_click=lambda _:print("CONFIRM SIGN UP"),
+                            on_click=lambda e: self.make_post_user_register_request(),
                             style=ButtonStyle(
                                 bgcolor=colors.ORANGE_700,
                                 color=colors.WHITE,
@@ -338,7 +328,8 @@ class FrontEnd:
                                         create_text_style("black"),
                                         15,
                                         colors.BLACK,
-                                        colors.WHITE70
+                                        colors.WHITE70,
+                                        self.on_email_change
                                     ),
                                     create_colored_icon(icons.PERSON_ROUNDED, color="white")
                                 ])
@@ -359,6 +350,7 @@ class FrontEnd:
                                         15,
                                         colors.BLACK,
                                         colors.WHITE70,
+                                        self.on_password_change,
                                         True,
                                         True
                                     ),
@@ -401,7 +393,7 @@ class FrontEnd:
                                 },
                                 padding=20,
                             ),
-                            on_click=lambda _: print("LOGIN BUTTON PRESSET")
+                            on_click=lambda e: self.make_post_user_login_request(),
                         )
                     ),
                     Container(
@@ -678,6 +670,11 @@ class FrontEnd:
         self.make_playlist_upload_request(self.txt_url.value)
         print("DONE")
 
+    def submit_registration(self, e=None):
+        print("HERE WE SUBMIT THE RETGISTRATION INFO")
+        self.make_post_user_register_request(self.email, self.password)
+        print("DONE")
+
     def download_audio(self, e):
         """
 
@@ -725,7 +722,7 @@ class FrontEnd:
                 "Refresh your token and try again."
             )
         else:
-            self.show_error_dialog("Error", "There server responded:\t" + str(response.status_code))
+            self.show_error_dialog("Error", "The server responded:\t" + str(response.status_code))
 
     def make_playlist_upload_request(self, link):
         """
@@ -842,6 +839,70 @@ class FrontEnd:
 
     def make_playlist_file_upload_request(self, files):
         pass
+
+    def make_post_user_register_request(self):
+        data = {"email": self.email.data, "password": self.password.data}
+
+        response = make_post_request(
+            'http://' + self.host_address + ':' + self.host_port + '/api/global/register',
+            data
+        )
+        if response == 201:
+            print("RESPONSE is 201!!")
+            snack.open = True
+            self.page.update()
+        else:
+            print("You were not registered! Try again.")
+            snack.content.value = "You were not registered! Try again."
+            snack.open = True
+            self.page.update()
+
+    def make_post_user_login_request(self):
+
+        data = {"email": self.email.data, "password": self.password.data}
+
+        response = make_post_request(
+            'http://' + self.host_address + ':' + self.host_port + '/api/global/login',
+            data
+        )
+        if response == 201:
+            print("LOGIN: RESPONSE is 201!!")
+
+            print("HERE WE LOAD THE VIEW OF THE LOGGED USER")
+            self.page.append(
+                View(
+                    f"/{self.email}",
+                    horizontal_alignment="center",
+                    vertical_alignment="center",
+                    controls=[
+                        Column(
+                            alignment="center",
+                            horizontal_alignment="center",
+                            controls=[
+                                Text(
+                                    "Successfully Logged In!",
+                                    size=44,
+                                    weight="w700",
+                                    text_align="center"
+                                ),
+                                Text(
+                                    f"Login Information:\nEmail: {self.email}\nPassword: {self.password}",
+                                    size=32,
+                                    weight="w500",
+                                    text_align="center"
+                                )
+                            ]
+                        )
+                    ]
+                )
+            )
+
+            self.page.update()
+        else:
+            print("You were not registered! Try again.")
+            snack.content.value = "You were not registered! Try again."
+            snack.open = True
+            self.page.update()
 
 
 def main(page: Page):

@@ -16,6 +16,7 @@ from flet import (
     TextField,
     TextStyle,
     colors,
+    SnackBar
 )
 
 
@@ -192,7 +193,7 @@ def create_simple_textfield(label_text):
 
 
 def create_custom_textfield(hint_text, hint_style, bgcolor, text_style, border_radius, border_color,
-                            focused_border_color, password=False, can_reveal_password=False):
+                            focused_border_color, func, password=False, can_reveal_password=False):
     return TextField(
         hint_text=hint_text,
         hint_style=hint_style,
@@ -201,6 +202,7 @@ def create_custom_textfield(hint_text, hint_style, bgcolor, text_style, border_r
         border_radius=border_radius,
         border_color=border_color,
         focused_border_color=focused_border_color,
+        on_change=func,
         password=password,
         can_reveal_password=can_reveal_password,
     )
@@ -217,3 +219,7 @@ def create_colored_icon(icon, color):
         icon,
         color=color
     )
+
+snack = SnackBar(
+    create_simple_text("Registration successful!")
+)
