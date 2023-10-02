@@ -138,7 +138,7 @@ def create_modal_alert_dialog(title, content_text, yes_func, no_func, dismiss_fu
     )
 
 
-def create_appbar(text, bg_color):
+def create_simple_appbar(text, bg_color):
     return AppBar(
         title=Text(text),
         bgcolor=bg_color

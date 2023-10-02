@@ -74,6 +74,7 @@ class FrontEnd:
     def __init__(self, page: Page, host_address, host_port, self_host_address, self_host_port):
         self.email: Text = Text("")
         self.password: Text = Text("")
+        self.isLogin = False
         self.txt_url: TextField = None
         self.page = page
         self.page.title = "ytm-manager"
@@ -176,6 +177,45 @@ class FrontEnd:
 
         self.page.update()
 
+    def enable_login_status(self):
+        self.isLogin = True
+
+    def disable_login_status(self):
+        self.isLogin = False
+
+    def process_menu_buttons(self):
+        logged_in_bar = create_popup_menu_button(
+            create_popup_menu_item("Theme", icons.DARK_MODE, self.change_theme),
+            create_popup_menu_item("My Account", icons.SETTINGS_ACCESSIBILITY_ROUNDED,
+                                   lambda _: self.page.go("/account")),
+        )
+
+        logged_out_bar = create_popup_menu_button(
+            create_popup_menu_item("Theme", icons.DARK_MODE, self.change_theme),
+            create_popup_menu_item("Register", icons.ACCESSIBILITY_NEW, lambda _: self.page.go("/register"))
+        )
+
+        if not self.isLogin:
+            popup_menu = logged_out_bar
+        else:
+            popup_menu = logged_in_bar
+        return popup_menu
+
+    def process_menu_register(self):
+        if not self.isLogin:
+            menu_buttons = [self.process_menu_buttons()]
+        else:
+            menu_buttons = [
+                self.audio_url_icon_button,
+                self.playlist_url_icon_button,
+                self.audio_upload_icon_button,
+                self.playlist_upload_icon_button,
+                self.audio_upload_2_icon_button,
+                self.playlist_upload_2_icon_button,
+                self.process_menu_buttons()
+            ]
+        return menu_buttons
+
     def create_menu(self):
         """
         Create the main menu bar (AppBar).
@@ -183,25 +223,13 @@ class FrontEnd:
         Returns:
             AppBar: The main menu bar.
         """
-
         return AppBar(
             leading=create_simple_icon(icons.DOWNLOAD_FOR_OFFLINE),
             leading_width=40,
             title=create_simple_text("ytm-manager"),
             center_title=False,
             bgcolor=colors.SURFACE_VARIANT,
-            actions=[
-                self.audio_url_icon_button,
-                self.playlist_url_icon_button,
-                self.audio_upload_icon_button,
-                self.playlist_upload_icon_button,
-                self.audio_upload_2_icon_button,
-                self.playlist_upload_2_icon_button,
-                create_popup_menu_button(
-                    create_popup_menu_item("Theme", icons.DARK_MODE, self.change_theme),
-                    create_popup_menu_item("Log In", icons.ACCESSIBILITY_NEW, lambda _: self.page.go("/"))
-                )
-            ]
+            actions=self.process_menu_register()
         )
 
     def on_email_change(self, value):
@@ -209,6 +237,10 @@ class FrontEnd:
 
     def on_password_change(self, value):
         self.password = value
+
+    def create_options_page_body(self):
+        print("CREATE OPTIONS PAGE BODY HERE!! :)")
+        return Text("ACCOUNT")
 
     def create_register_page_body(self):
         self.page.vertical_alignment = "center"
@@ -293,135 +325,139 @@ class FrontEnd:
         self.page.vertical_alignment = "center"
         self.page.horizontal_alignment = "center"
 
-        ctx = Container(
-            bgcolor="red",
-            alignment=alignment.center,
-            border_radius=100,
-            padding=20,
-            height=800,
-            animate=animation.Animation(
-                duration=300,
-                curve="easyInOut"
-            ),
-            content=Column(
-                controls=[
-                    Container(
-                        width=300,
-                        margin=margin.only(left=135, right=10, top=25),
-                        content=Text(
-                            "Login",
-                            size=30,
-                            color="white",
-                            weight="w700"
-                        )
-                    ),
-                    Container(
-                        width=300,
-                        margin=margin.only(left=20, right=20, top=35),
-                        content=Column(
-                            controls=[
-                                Row([
-                                    create_custom_textfield(
-                                        "Username",
-                                        create_text_style("grey"),
-                                        "white",
-                                        create_text_style("black"),
-                                        15,
-                                        colors.BLACK,
-                                        colors.WHITE70,
-                                        self.on_email_change
-                                    ),
-                                    create_colored_icon(icons.PERSON_ROUNDED, color="white")
-                                ])
-                            ]
-                        )
-                    ),
-                    Container(
-                        width=300,
-                        margin=margin.only(left=20, right=20, top=5),
-                        content=Column(
-                            controls=[
-                                Row([
-                                    create_custom_textfield(
-                                        "Password",
-                                        create_text_style("grey"),
-                                        "white",
-                                        create_text_style("black"),
-                                        15,
-                                        colors.BLACK,
-                                        colors.WHITE70,
-                                        self.on_password_change,
-                                        True,
-                                        True
-                                    ),
-                                    create_colored_icon(icons.PASSWORD_ROUNDED, color="white")
-                                ])
-                            ]
-                        )
-                    ),
-                    Row([
-                        Checkbox(
-                            value=False,
-                            on_change=lambda _:print("checkbox toggle")
-                        ),
-                        create_text("Remember me", 14, "white"),
+        if not self.isLogin:
+
+            ctx = Container(
+                bgcolor="red",
+                alignment=alignment.center,
+                border_radius=100,
+                padding=20,
+                height=800,
+                animate=animation.Animation(
+                    duration=300,
+                    curve="easyInOut"
+                ),
+                content=Column(
+                    controls=[
                         Container(
-                            width=150,
-                            margin=margin.only(left=25, right=10),
-                            content=TextButton(
-                                "Forgot Password?",
+                            width=300,
+                            margin=margin.only(left=135, right=10, top=25),
+                            content=Text(
+                                "Login",
+                                size=30,
+                                color="white",
+                                weight="w700"
+                            )
+                        ),
+                        Container(
+                            width=300,
+                            margin=margin.only(left=20, right=20, top=35),
+                            content=Column(
+                                controls=[
+                                    Row([
+                                        create_custom_textfield(
+                                            "Username",
+                                            create_text_style("grey"),
+                                            "white",
+                                            create_text_style("black"),
+                                            15,
+                                            colors.BLACK,
+                                            colors.WHITE70,
+                                            self.on_email_change
+                                        ),
+                                        create_colored_icon(icons.PERSON_ROUNDED, color="white")
+                                    ])
+                                ]
+                            )
+                        ),
+                        Container(
+                            width=300,
+                            margin=margin.only(left=20, right=20, top=5),
+                            content=Column(
+                                controls=[
+                                    Row([
+                                        create_custom_textfield(
+                                            "Password",
+                                            create_text_style("grey"),
+                                            "white",
+                                            create_text_style("black"),
+                                            15,
+                                            colors.BLACK,
+                                            colors.WHITE70,
+                                            self.on_password_change,
+                                            True,
+                                            True
+                                        ),
+                                        create_colored_icon(icons.PASSWORD_ROUNDED, color="white")
+                                    ])
+                                ]
+                            )
+                        ),
+                        Row([
+                            Checkbox(
+                                value=False,
+                                on_change=lambda _:print("checkbox toggle")
+                            ),
+                            create_text("Remember me", 14, "white"),
+                            Container(
+                                width=150,
+                                margin=margin.only(left=25, right=10),
+                                content=TextButton(
+                                    "Forgot Password?",
+                                    style=ButtonStyle(
+                                        color="white",
+                                    ),
+                                    on_click=lambda _:print("You forgot your password")
+                                )
+                            )
+                        ]),
+                        Container(
+                            width=300,
+                            margin=margin.only(left=20, right=20, top=10),
+                            content=ElevatedButton(
+                                "Login",
+                                width=300,
+                                height=55,
                                 style=ButtonStyle(
                                     color="white",
+                                    bgcolor=colors.ORANGE_700,
+                                    shape={
+                                        MaterialState.FOCUSED: RoundedRectangleBorder(radius=5),
+                                        MaterialState.HOVERED: RoundedRectangleBorder(radius=5),
+                                    },
+                                    padding=20,
                                 ),
-                                on_click=lambda _:print("You forgot your password")
+                                on_click=lambda e: self.make_post_user_login_request(),
                             )
-                        )
-                    ]),
-                    Container(
-                        width=300,
-                        margin=margin.only(left=20, right=20, top=10),
-                        content=ElevatedButton(
-                            "Login",
+                        ),
+                        Container(
                             width=300,
-                            height=55,
-                            style=ButtonStyle(
+                            margin=margin.only(left=20, right=20, top=15),
+                            content=Text(
+                                "Don't have an account?",
+                                size=14,
+                                text_align="center",
                                 color="white",
-                                bgcolor=colors.ORANGE_700,
-                                shape={
-                                    MaterialState.FOCUSED: RoundedRectangleBorder(radius=5),
-                                    MaterialState.HOVERED: RoundedRectangleBorder(radius=5),
-                                },
-                                padding=20,
-                            ),
-                            on_click=lambda e: self.make_post_user_login_request(),
-                        )
-                    ),
-                    Container(
-                        width=300,
-                        margin=margin.only(left=20, right=20, top=15),
-                        content=Text(
-                            "Don't have an account?",
-                            size=14,
-                            text_align="center",
-                            color="white",
-                        )
-                    ),
-                    Container(
-                        width=150,
-                        margin=margin.only(left=100, right=20),
-                        content=TextButton(
-                            "Register",
-                            style=ButtonStyle(
-                                color="white"
-                            ),
-                            on_click=lambda _: self.page.go("/register")
-                        )
-                    ),
+                            )
+                        ),
+                        Container(
+                            width=150,
+                            margin=margin.only(left=100, right=20),
+                            content=TextButton(
+                                "Register",
+                                style=ButtonStyle(
+                                    color="white"
+                                ),
+                                on_click=lambda _: self.page.go("/register")
+                            )
+                        ),
 
-                ]
+                    ]
+                )
             )
-        )
-        return ctx
+            return ctx
+        else:
+            print("USER HAS BEEN LOGGED IN in CRERTE_PAGE_BODY")
 
     def create_main_view(self):
         """
@@ -442,10 +478,29 @@ class FrontEnd:
         return View(
             "/register",
             [
-                create_appbar("Register", colors.SURFACE_VARIANT),
+                create_simple_appbar("Register Account", colors.SURFACE_VARIANT),
                 self.create_register_page_body()
             ]
         )
+
+    def create_options_view(self):
+        if self.isLogin:
+            return View(
+                "/account",
+                [
+                    create_simple_appbar("Options", colors.SURFACE_VARIANT),
+                    self.create_options_page_body()
+                ]
+            )
+        else:
+            print("UNREGISTERED")
+            return View(
+                "/account",
+                [
+                    create_simple_appbar("UNAUTHORIZED", colors.SURFACE_VARIANT),
+                    Text("Please go back and Sign In to get access to your account options!")
+                ]
+            )
 
     def file_picker_result(self, e: FilePickerResultEvent):
         """
@@ -544,7 +599,7 @@ class FrontEnd:
         return View(
             view_path,
             [
-                create_appbar(view_name, colors.SURFACE_VARIANT),
+                create_simple_appbar(view_name, colors.SURFACE_VARIANT),
                 create_simple_text("This is the " + view_name + " Page"),
                 create_button(
                     "Select files...",
@@ -636,6 +691,10 @@ class FrontEnd:
                 self.create_register_view()
             )
 
+        if self.page.route == "/account":
+            self.page.views.append(
+                self.create_options_view()
+            )
         self.page.update()
 
     def view_pop(self, e=None):
@@ -844,17 +903,16 @@ class FrontEnd:
         data = {"email": self.email.data, "password": self.password.data}
 
         response = make_post_request(
-            'http://' + self.host_address + ':' + self.host_port + '/api/global/register',
+            'http://' + self.host_address + ':' + self.host_port + '/api/global/signup',
             data
         )
         if response == 201:
-            print("RESPONSE is 201!!")
-            snack.open = True
+            print("RESPONSE is 201!! USER REGISTERED")
+            # snack.open = True
+
             self.page.update()
         else:
-            print("You were not registered! Try again.")
-            snack.content.value = "You were not registered! Try again."
-            snack.open = True
+            self.show_error_dialog("UNREGISTERED", "You were not registered! Try again.")
             self.page.update()
 
     def make_post_user_login_request(self):
@@ -867,6 +925,7 @@ class FrontEnd:
         )
         if response == 201:
             print("LOGIN: RESPONSE is 201!!")
+            self.enable_login_status()
 
             print("HERE WE LOAD THE VIEW OF THE LOGGED USER")
             self.page.append(
@@ -900,8 +959,7 @@ class FrontEnd:
             self.page.update()
         else:
             print("You were not registered! Try again.")
-            snack.content.value = "You were not registered! Try again."
-            snack.open = True
+            self.show_error_dialog("UNREGISTERED", "You were not registered! Try again.")
             self.page.update()
 
 
